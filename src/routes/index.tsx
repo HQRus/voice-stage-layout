@@ -156,6 +156,8 @@ function Index() {
             onMouseLeave={() => setPanelOpen(false)}
           >
             <ControlsPanel
+              mode={mode}
+              onModeChange={changeMode}
               onAdd={add}
               onRemoveLast={removeLast}
               onShuffle={shuffle}
