@@ -19,8 +19,12 @@ interface Props {
   onDebug: (v: boolean) => void;
   equalSpacing: boolean;
   onEqualSpacing: (v: boolean) => void;
-  allowOverlap: boolean;
-  onAllowOverlap: (v: boolean) => void;
+  overlapAmount: number;
+  onOverlapAmount: (v: number) => void;
+  cornerRadius: number;
+  onCornerRadius: (v: number) => void;
+  rotationAmount: number;
+  onRotationAmount: (v: number) => void;
   onApplyJson: (json: string) => void;
   onClearJson: () => void;
   jsonActive: boolean;
@@ -105,10 +109,33 @@ export function ControlsPanel(p: Props) {
             value={p.equalSpacing}
             onChange={p.onEqualSpacing}
           />
-          <Toggle
-            label="Allow overlap & tilt"
-            value={p.allowOverlap}
-            onChange={p.onAllowOverlap}
+        </Section>
+
+        <Section title="Geometry">
+          <Slider
+            label="Overlap"
+            value={p.overlapAmount}
+            min={0}
+            max={200}
+            unit="px"
+            onChange={p.onOverlapAmount}
+          />
+          <Slider
+            label="Corner radius"
+            value={p.cornerRadius}
+            min={0}
+            max={120}
+            unit="px"
+            onChange={p.onCornerRadius}
+          />
+          <Slider
+            label="Rotation"
+            value={p.rotationAmount}
+            min={0}
+            max={20}
+            unit="°"
+            step={0.5}
+            onChange={p.onRotationAmount}
           />
         </Section>
 
@@ -215,5 +242,45 @@ function Toggle({
         />
       </span>
     </button>
+  );
+}
+
+function Slider({
+  label,
+  value,
+  min,
+  max,
+  unit,
+  step = 1,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  unit: string;
+  step?: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="py-2">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm text-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {value}
+          {unit}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-muted"
+        style={{ accentColor: "hsl(var(--accent))" }}
+      />
+    </div>
   );
 }
