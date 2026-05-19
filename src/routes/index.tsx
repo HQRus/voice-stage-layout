@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PanelRight, X } from "lucide-react";
+import { PanelRight, X, Moon, Sun } from "lucide-react";
 import { Canvas } from "@/components/Canvas";
 import { ControlsPanel, type PanelMode } from "@/components/ControlsPanel";
 import {
@@ -38,6 +38,23 @@ function Index() {
   const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [mode, setMode] = useState<PanelMode>("agent");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = (typeof localStorage !== "undefined" && localStorage.getItem("theme")) as
+      | "light" | "dark" | null;
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+    }
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    try { localStorage.setItem("theme", next); } catch {}
+  }
 
   function changeMode(m: PanelMode) {
     if (m === mode) return;
@@ -135,6 +152,14 @@ function Index() {
         className="fixed top-0 right-0 h-full w-32 z-30"
         onMouseEnter={() => setPanelOpen(true)}
       />
+
+      <button
+        onClick={toggleTheme}
+        className="fixed top-5 right-20 z-50 w-11 h-11 rounded-full bg-card/90 backdrop-blur border border-border shadow-desk flex items-center justify-center text-foreground hover:bg-card transition"
+        aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      >
+        {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      </button>
 
       <button
         onClick={() => setPanelOpen((v) => !v)}
