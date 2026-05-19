@@ -16,7 +16,6 @@ interface Props {
   overlapAmount: number;
   rotationAmount: number;
   cornerRadius: number;
-  // Optional override — when present, bypasses the rule-based engine.
   overrideFrames?: PositionedItem[] | null;
 }
 
@@ -43,14 +42,16 @@ export function Canvas({
     return () => ro.disconnect();
   }, []);
 
-  const frames =
-    overrideFrames ??
-    generateLayout(items, size, { intent, equalSpacing, overlapAmount, rotationAmount });
+  const result = overrideFrames
+    ? { frames: overrideFrames, contentHeight: size.height, scrollable: false }
+    : generateLayout(items, size, { intent, equalSpacing, overlapAmount, rotationAmount });
+
+  const { frames, contentHeight, scrollable } = result;
 
   return (
     <div
       ref={ref}
-      className="relative w-full h-full overflow-hidden bg-background"
+      className={`relative w-full h-full bg-background ${scrollable ? "overflow-y-auto" : "overflow-hidden"}`}
     >
       {debug && (
         <>
@@ -59,19 +60,17 @@ export function Canvas({
         </>
       )}
 
-      <AnimatePresence mode="popLayout">
-        {frames.map((f) => (
-          <CanvasItem key={f.id} item={f} debug={debug} viewport={size} cornerRadius={cornerRadius} />
-        ))}
-      </AnimatePresence>
+      <div className="relative w-full" style={{ height: scrollable ? contentHeight : "100%" }}>
+        <AnimatePresence mode="popLayout">
+          {frames.map((f) => (
+            <CanvasItem key={f.id} item={f} debug={debug} viewport={size} cornerRadius={cornerRadius} />
+          ))}
+        </AnimatePresence>
+      </div>
 
       {items.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-sm text-muted-foreground tracking-wide">
-              The stage is empty
-            </div>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-sm text-muted-foreground tracking-wide">The stage is empty</div>
         </div>
       )}
     </div>
