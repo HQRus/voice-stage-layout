@@ -371,7 +371,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
 
     case "section":
       return (
-        <div className="w-full h-full flex items-end pb-3 border-b border-border/60">
+        <div className="w-full h-full flex items-end pb-3 px-1 border-b border-border/60">
           <div className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">{item.content}</div>
         </div>
       );
