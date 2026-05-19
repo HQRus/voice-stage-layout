@@ -118,7 +118,7 @@ function ItemContent({ item }: { item: PositionedItem }) {
       const fontSize = Math.max(24, Math.min(72, Math.sqrt(area) / 8));
       return (
         <div
-          className={`w-full h-full ${radius} ${shadow} bg-card p-10 flex flex-col justify-center font-display text-foreground`}
+          className={`w-full h-full ${radius} ${shadow} bg-card p-10 flex flex-col justify-center font-serif-display text-foreground`}
         >
           <div className="text-accent text-5xl leading-none mb-2">"</div>
           <p className="leading-[1.1] tracking-tight" style={{ fontSize }}>
