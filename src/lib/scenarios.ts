@@ -155,23 +155,6 @@ const catCafe: Scenario = {
         ),
       ],
     },
-    {
-      label: "Transcript",
-      prompt: "(Speech pill)",
-      intent: "transcript",
-      items: [
-        make.chat("You", "Russ, help me make a tiny brand for a pop-up cat café.", "10:02"),
-        make.chat("Russ", "Three concepts. I like the calm, designy one — adoptable cats as art critics.", "10:02"),
-        make.chat("You", "Use that. Name it and give me the vibe.", "10:03"),
-        make.chat("Russ", "Studio Whiskers. Warm sand palette, Söhne + Inter, slow and a little literary.", "10:03"),
-        make.chat("You", "Make three visual directions.", "10:05"),
-        make.chat("Russ", "Three takes — cozy, contrasty, minimal. Which one?", "10:05"),
-        make.chat("You", "Use the cozy one. More premium.", "10:06"),
-        make.chat("Russ", "Polished hero with caption. Want a mascot pass next?", "10:06"),
-        make.chat("You", "Use this cat as the mascot.", "10:08"),
-        make.chat("Russ", "Sticker, poster, avatar variations. Ready for the ad?", "10:09"),
-      ],
-    },
   ],
 };
 
