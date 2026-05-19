@@ -118,6 +118,7 @@ function Index() {
         overlapAmount={overlapAmount}
         rotationAmount={rotationAmount}
         cornerRadius={cornerRadius}
+        shadowAmount={shadowAmount}
         overrideFrames={jsonOverride}
       />
 
