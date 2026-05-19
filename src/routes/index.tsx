@@ -125,6 +125,7 @@ function Index() {
             exit={{ x: 360, opacity: 0 }}
             transition={{ type: "spring", stiffness: 220, damping: 28 }}
             className="fixed top-0 right-0 h-full z-40 shadow-desk-hero"
+            onClick={(e) => e.stopPropagation()}
           >
             <ControlsPanel
               onAdd={add}
