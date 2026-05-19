@@ -220,6 +220,20 @@ export function ControlsPanel(p: Props) {
                 <Btn onClick={() => p.onAdd("chatMessage")}>Chat</Btn>
                 <Btn onClick={() => p.onAdd("section")}>Section</Btn>
               </Grid>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground pt-3">AI widgets</div>
+              <Grid>
+                <Btn onClick={() => p.onAdd("weather")}>Weather</Btn>
+                <Btn onClick={() => p.onAdd("stock")}>Stock</Btn>
+                <Btn onClick={() => p.onAdd("map")}>Map</Btn>
+                <Btn onClick={() => p.onAdd("link")}>Link</Btn>
+                <Btn onClick={() => p.onAdd("metric")}>Metric</Btn>
+                <Btn onClick={() => p.onAdd("chart")}>Chart</Btn>
+                <Btn onClick={() => p.onAdd("code")}>Code</Btn>
+                <Btn onClick={() => p.onAdd("checklist")}>Checklist</Btn>
+                <Btn onClick={() => p.onAdd("product")}>Product</Btn>
+                <Btn onClick={() => p.onAdd("flight")}>Flight</Btn>
+                <Btn onClick={() => p.onAdd("poll")}>Poll</Btn>
+              </Grid>
               <div className="pt-3">
                 <Grid>
                   <Btn onClick={p.onShuffle}>Shuffle</Btn>
