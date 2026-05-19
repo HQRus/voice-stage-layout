@@ -16,6 +16,7 @@ interface Props {
   overlapAmount: number;
   rotationAmount: number;
   cornerRadius: number;
+  shadowAmount: number;
   overrideFrames?: PositionedItem[] | null;
 }
 
