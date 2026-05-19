@@ -57,7 +57,7 @@ export function Canvas({
 
       <AnimatePresence mode="popLayout">
         {frames.map((f) => (
-          <CanvasItem key={f.id} item={f} debug={debug} />
+          <CanvasItem key={f.id} item={f} debug={debug} viewport={size} />
         ))}
       </AnimatePresence>
 

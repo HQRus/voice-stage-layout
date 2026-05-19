@@ -1,22 +1,35 @@
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
-import type { PositionedItem } from "@/lib/layoutEngine";
+import type { PositionedItem, Viewport } from "@/lib/layoutEngine";
 
 interface Props {
   item: PositionedItem;
   debug: boolean;
+  viewport: Viewport;
 }
 
 // Renders a single positioned media item.
 // All position/size/rotation come from the layout engine; this component is
 // dumb on purpose so the same renderer works for rule-based or AI-driven layouts.
-export function CanvasItem({ item, debug }: Props) {
+export function CanvasItem({ item, debug, viewport }: Props) {
   const { x, y, width, height, rotation, zIndex } = item;
+
+  // Emerge from the center of the canvas
+  const centerX = viewport.width / 2 - width / 2;
+  const centerY = viewport.height / 2 - height / 2;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.85, rotate: rotation }}
+      initial={{
+        opacity: 0,
+        scale: 0.4,
+        rotate: 0,
+        x: centerX,
+        y: centerY,
+        width,
+        height,
+      }}
       animate={{
         x,
         y,
@@ -26,7 +39,12 @@ export function CanvasItem({ item, debug }: Props) {
         opacity: 1,
         scale: 1,
       }}
-      exit={{ opacity: 0, scale: 0.8 }}
+      exit={{
+        opacity: 0,
+        scale: 0.4,
+        x: centerX,
+        y: centerY,
+      }}
       transition={{
         type: "spring",
         stiffness: 140,
@@ -83,7 +101,6 @@ function ItemContent({ item }: { item: PositionedItem }) {
       );
 
     case "text": {
-      // Scale font with available area for dramatic typography
       const area = item.width * item.height;
       const fontSize = Math.max(28, Math.min(120, Math.sqrt(area) / 6));
       return (
@@ -104,10 +121,7 @@ function ItemContent({ item }: { item: PositionedItem }) {
           className={`w-full h-full ${radius} ${shadow} bg-card p-10 flex flex-col justify-center font-display text-foreground`}
         >
           <div className="text-accent text-5xl leading-none mb-2">"</div>
-          <p
-            className="leading-[1.1] tracking-tight"
-            style={{ fontSize }}
-          >
+          <p className="leading-[1.1] tracking-tight" style={{ fontSize }}>
             {item.content}
           </p>
         </div>
