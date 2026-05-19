@@ -106,7 +106,7 @@ function Index() {
   };
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-background">
+    <main className="relative h-screen w-screen overflow-hidden">
       <Canvas
         items={items}
         intent={intent}
