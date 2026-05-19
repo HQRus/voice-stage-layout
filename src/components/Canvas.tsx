@@ -13,7 +13,9 @@ interface Props {
   intent: LayoutIntent;
   debug: boolean;
   equalSpacing: boolean;
-  allowOverlap: boolean;
+  overlapAmount: number;
+  rotationAmount: number;
+  cornerRadius: number;
   // Optional override — when present, bypasses the rule-based engine.
   overrideFrames?: PositionedItem[] | null;
 }
