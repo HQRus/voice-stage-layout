@@ -63,12 +63,9 @@ export function Canvas({
 
       {items.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center font-display">
-            <div className="text-6xl text-foreground/30 leading-none">
-              Empty canvas
-            </div>
-            <div className="text-sm text-muted-foreground mt-3 tracking-wide">
-              Add media from the panel to compose a layout
+          <div className="text-center">
+            <div className="text-sm text-muted-foreground tracking-wide">
+              The stage is empty
             </div>
           </div>
         </div>
