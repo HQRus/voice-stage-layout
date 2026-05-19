@@ -3,8 +3,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { LayoutIntent } from "@/lib/layoutEngine";
 import { scenarios } from "@/lib/scenarios";
 
+export type PanelMode = "agent" | "manual";
+
 interface Props {
-  // Manual add controls (kept for raw testing)
+  mode: PanelMode;
+  onModeChange: (m: PanelMode) => void;
+
+  // Manual add controls
   onAdd: (type:
     | "image" | "video" | "text" | "document" | "logo" | "quote"
     | "concept" | "brandMark" | "palette" | "typeSample" | "audio"
@@ -13,7 +18,7 @@ interface Props {
   onShuffle: () => void;
   onClear: () => void;
 
-  // Scenario playback
+  // Scenario playback (agent mode)
   scenarioId: string | null;
   scenarioStep: number;
   scenarioStateLabel: string | null;
@@ -67,103 +72,130 @@ const intents: { value: LayoutIntent; label: string }[] = [
 export function ControlsPanel(p: Props) {
   const [jsonOpen, setJsonOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
-  const [manualOpen, setManualOpen] = useState(false);
 
   return (
     <aside className="w-[340px] shrink-0 h-full border-l border-border bg-card/85 backdrop-blur flex flex-col">
       <div className="px-6 py-5 border-b border-border">
         <h1 className="font-display text-2xl text-foreground leading-tight">Voice StagE</h1>
         <div className="text-xs text-muted-foreground mt-1.5">
-          {p.scenarioStateLabel
+          {p.mode === "agent" && p.scenarioStateLabel
             ? `${p.scenarioStep + 1} / ${p.scenarioStateCount} — ${p.scenarioStateLabel}`
             : `${p.itemCount} item${p.itemCount === 1 ? "" : "s"} on canvas`}
+        </div>
+
+        {/* Mode switch */}
+        <div className="mt-4 flex p-1 rounded-xl bg-muted/60">
+          <ModeTab active={p.mode === "agent"} onClick={() => p.onModeChange("agent")}>
+            Agent (AI)
+          </ModeTab>
+          <ModeTab active={p.mode === "manual"} onClick={() => p.onModeChange("manual")}>
+            Manual
+          </ModeTab>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-        <Section title="Scenario">
-          <select
-            value={p.scenarioId ?? ""}
-            onChange={(e) => p.onLoadScenario(e.target.value)}
-            className="w-full py-2.5 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-          >
-            <option value="">— Load a scenario —</option>
-            {scenarios.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
-          {p.scenarioId && (
-            <>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => p.onScenarioStep(-1)}
-                  disabled={p.scenarioStep <= 0}
-                  className="py-2 rounded-xl border border-border bg-background text-sm text-foreground hover:bg-muted transition flex items-center justify-center gap-1 disabled:opacity-40"
-                >
-                  <ChevronLeft className="w-4 h-4" /> Prev
-                </button>
-                <button
-                  onClick={() => p.onScenarioStep(1)}
-                  disabled={p.scenarioStep >= p.scenarioStateCount - 1}
-                  className="py-2 rounded-xl bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition flex items-center justify-center gap-1 disabled:opacity-40"
-                >
-                  Next <ChevronRight className="w-4 h-4" />
-                </button>
+        {p.mode === "agent" ? (
+          <>
+            <Section title="Scenario">
+              <div className="text-[11px] text-muted-foreground mb-2 leading-snug">
+                The agent generates items + layout intent together. Pick a scenario and step through Russ's responses.
               </div>
-              {p.scenarioPrompt && (
-                <div className="mt-3 px-3 py-2.5 rounded-xl bg-muted/60 text-xs text-foreground/80 italic leading-snug">
-                  "{p.scenarioPrompt}"
+              <select
+                value={p.scenarioId ?? ""}
+                onChange={(e) => p.onLoadScenario(e.target.value)}
+                className="w-full py-2.5 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                <option value="">— Load a scenario —</option>
+                {scenarios.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              {p.scenarioId && (
+                <>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => p.onScenarioStep(-1)}
+                      disabled={p.scenarioStep <= 0}
+                      className="py-2 rounded-xl border border-border bg-background text-sm text-foreground hover:bg-muted transition flex items-center justify-center gap-1 disabled:opacity-40"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Prev
+                    </button>
+                    <button
+                      onClick={() => p.onScenarioStep(1)}
+                      disabled={p.scenarioStep >= p.scenarioStateCount - 1}
+                      className="py-2 rounded-xl bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition flex items-center justify-center gap-1 disabled:opacity-40"
+                    >
+                      Next <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {p.scenarioPrompt && (
+                    <div className="mt-3 px-3 py-2.5 rounded-xl bg-muted/60 text-xs text-foreground/80 italic leading-snug">
+                      "{p.scenarioPrompt}"
+                    </div>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {Array.from({ length: p.scenarioStateCount }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => p.onJumpToStep(i)}
+                        className={`w-6 h-6 rounded-md text-[10px] tabular-nums ${i === p.scenarioStep ? "bg-foreground text-background" : "bg-muted text-foreground/60 hover:bg-muted/70"}`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    Active intent: <span className="text-foreground/80 normal-case tracking-normal">{p.intent}</span>
+                  </div>
+                </>
+              )}
+            </Section>
+
+            <Section title="AI layout JSON">
+              <div className="text-[11px] text-muted-foreground mb-2 leading-snug">
+                Paste a layout the AI generated to render it directly on the stage.
+              </div>
+              <button
+                onClick={() => setJsonOpen((v) => !v)}
+                className="w-full py-2 rounded-xl border border-border text-xs text-muted-foreground hover:bg-muted transition"
+              >
+                {jsonOpen ? "Hide" : "Paste layout JSON"}
+              </button>
+              {jsonOpen && (
+                <div className="mt-2 space-y-2">
+                  <textarea
+                    value={jsonText}
+                    onChange={(e) => setJsonText(e.target.value)}
+                    placeholder='[{"id":"a","type":"image","content":"...","x":0,"y":0,"width":400,"height":300,"rotation":-2,"zIndex":1,"layoutRole":"hero","focusWeight":1}]'
+                    className="w-full h-32 p-2 rounded-lg border border-border bg-background text-[11px] font-mono text-foreground/80 focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  />
+                  <Grid>
+                    <Btn onClick={() => p.onApplyJson(jsonText)}>Apply</Btn>
+                    <Btn onClick={p.onClearJson}>{p.jsonActive ? "Stop override" : "Clear"}</Btn>
+                  </Grid>
+                  {p.jsonActive && (
+                    <div className="text-[10px] text-accent uppercase tracking-widest">● AI JSON layout active</div>
+                  )}
                 </div>
               )}
-              <div className="mt-3 flex flex-wrap gap-1">
-                {Array.from({ length: p.scenarioStateCount }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => p.onJumpToStep(i)}
-                    className={`w-6 h-6 rounded-md text-[10px] tabular-nums ${i === p.scenarioStep ? "bg-foreground text-background" : "bg-muted text-foreground/60 hover:bg-muted/70"}`}
-                  >
-                    {i + 1}
-                  </button>
+            </Section>
+          </>
+        ) : (
+          <>
+            <Section title="Layout intent">
+              <select
+                value={p.intent}
+                onChange={(e) => p.onIntent(e.target.value as LayoutIntent)}
+                className="w-full py-2.5 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                {intents.map((i) => (
+                  <option key={i.value} value={i.value}>{i.label}</option>
                 ))}
-              </div>
-            </>
-          )}
-        </Section>
+              </select>
+            </Section>
 
-        <Section title="Layout intent">
-          <select
-            value={p.intent}
-            onChange={(e) => p.onIntent(e.target.value as LayoutIntent)}
-            className="w-full py-2.5 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-          >
-            {intents.map((i) => (
-              <option key={i.value} value={i.value}>{i.label}</option>
-            ))}
-          </select>
-        </Section>
-
-        <Section title="Modes">
-          <Toggle label="Debug outlines" value={p.debug} onChange={p.onDebug} />
-          <Toggle label="Equal spacing" value={p.equalSpacing} onChange={p.onEqualSpacing} />
-        </Section>
-
-        <Section title="Geometry">
-          <Slider label="Overlap" value={p.overlapAmount} min={0} max={200} unit="px" onChange={p.onOverlapAmount} />
-          <Slider label="Corner radius" value={p.cornerRadius} min={0} max={120} unit="px" onChange={p.onCornerRadius} />
-          <Slider label="Rotation" value={p.rotationAmount} min={0} max={20} unit="°" step={0.5} onChange={p.onRotationAmount} />
-          <Slider label="Shadow" value={p.shadowAmount} min={0} max={100} unit="%" onChange={p.onShadowAmount} />
-
-        </Section>
-
-        <Section title="Manual test">
-          <button
-            onClick={() => setManualOpen((v) => !v)}
-            className="w-full py-2 rounded-xl border border-border text-xs text-muted-foreground hover:bg-muted transition"
-          >
-            {manualOpen ? "Hide manual controls" : "Show manual controls"}
-          </button>
-          {manualOpen && (
-            <div className="mt-2 space-y-2">
+            <Section title="Add items">
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Generic</div>
               <Grid>
                 <Btn onClick={() => p.onAdd("image")}>Image</Btn>
@@ -173,7 +205,7 @@ export function ControlsPanel(p: Props) {
                 <Btn onClick={() => p.onAdd("document")}>Document</Btn>
                 <Btn onClick={() => p.onAdd("logo")}>Logo</Btn>
               </Grid>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground pt-2">Agent surfaces</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground pt-3">Agent surfaces</div>
               <Grid>
                 <Btn onClick={() => p.onAdd("concept")}>Concept</Btn>
                 <Btn onClick={() => p.onAdd("brandMark")}>Brand</Btn>
@@ -186,44 +218,32 @@ export function ControlsPanel(p: Props) {
                 <Btn onClick={() => p.onAdd("chatMessage")}>Chat</Btn>
                 <Btn onClick={() => p.onAdd("section")}>Section</Btn>
               </Grid>
-              <Grid>
-                <Btn onClick={p.onShuffle}>Shuffle</Btn>
-                <Btn onClick={p.onRemoveLast}>Remove last</Btn>
-              </Grid>
-              <button
-                onClick={p.onClear}
-                className="w-full py-2.5 rounded-xl border border-border text-sm text-foreground/70 hover:bg-muted transition"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
+              <div className="pt-3">
+                <Grid>
+                  <Btn onClick={p.onShuffle}>Shuffle</Btn>
+                  <Btn onClick={p.onRemoveLast}>Remove last</Btn>
+                </Grid>
+                <button
+                  onClick={p.onClear}
+                  className="mt-2 w-full py-2.5 rounded-xl border border-border text-sm text-foreground/70 hover:bg-muted transition"
+                >
+                  Clear all
+                </button>
+              </div>
+            </Section>
+          </>
+        )}
+
+        <Section title="Modes">
+          <Toggle label="Debug outlines" value={p.debug} onChange={p.onDebug} />
+          <Toggle label="Equal spacing" value={p.equalSpacing} onChange={p.onEqualSpacing} />
         </Section>
 
-        <Section title="AI layout JSON">
-          <button
-            onClick={() => setJsonOpen((v) => !v)}
-            className="w-full py-2 rounded-xl border border-border text-xs text-muted-foreground hover:bg-muted transition"
-          >
-            {jsonOpen ? "Hide" : "Paste layout JSON"}
-          </button>
-          {jsonOpen && (
-            <div className="mt-2 space-y-2">
-              <textarea
-                value={jsonText}
-                onChange={(e) => setJsonText(e.target.value)}
-                placeholder='[{"id":"a","type":"image","content":"...","x":0,"y":0,"width":400,"height":300,"rotation":-2,"zIndex":1,"layoutRole":"hero","focusWeight":1}]'
-                className="w-full h-32 p-2 rounded-lg border border-border bg-background text-[11px] font-mono text-foreground/80 focus:outline-none focus:ring-2 focus:ring-accent/40"
-              />
-              <Grid>
-                <Btn onClick={() => p.onApplyJson(jsonText)}>Apply</Btn>
-                <Btn onClick={p.onClearJson}>{p.jsonActive ? "Stop override" : "Clear"}</Btn>
-              </Grid>
-              {p.jsonActive && (
-                <div className="text-[10px] text-accent uppercase tracking-widest">● AI JSON layout active</div>
-              )}
-            </div>
-          )}
+        <Section title="Geometry">
+          <Slider label="Overlap" value={p.overlapAmount} min={0} max={200} unit="px" onChange={p.onOverlapAmount} />
+          <Slider label="Corner radius" value={p.cornerRadius} min={0} max={120} unit="px" onChange={p.onCornerRadius} />
+          <Slider label="Rotation" value={p.rotationAmount} min={0} max={20} unit="°" step={0.5} onChange={p.onRotationAmount} />
+          <Slider label="Shadow" value={p.shadowAmount} min={0} max={100} unit="%" onChange={p.onShadowAmount} />
         </Section>
       </div>
 
@@ -231,6 +251,17 @@ export function ControlsPanel(p: Props) {
         Voice StagE — agent surface preview
       </div>
     </aside>
+  );
+}
+
+function ModeTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+    >
+      {children}
+    </button>
   );
 }
 
