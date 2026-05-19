@@ -358,10 +358,11 @@ function documentLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): P
   );
 }
 
-function presentationLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function presentationLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   // Centered title-style composition: one big focal item + balanced supports
   const s = stage(v);
-  if (items.length <= 1) return heroLayout(items, v);
+  const overlap = opts.overlapAmount ?? 0;
+  if (items.length <= 1) return heroLayout(items, v, opts);
   const [first, ...rest] = items;
   const titleH = s.h * 0.35;
   const frames: PositionedItem[] = [
@@ -380,7 +381,7 @@ function presentationLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   const restY = s.y + titleH + 32;
   const restH = s.h - titleH - 32;
   const cols = rest.length;
-  const gap = 24;
+  const gap = Math.max(0, 24 - overlap);
   const cw = (s.w - gap * (cols - 1)) / cols;
   rest.forEach((it, i) => {
     frames.push({
@@ -391,7 +392,7 @@ function presentationLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: restY,
       width: cw,
       height: restH,
-      rotation: tilt(it.id, 1.5),
+      rotation: tilt(it.id, opts.rotationAmount ?? 1.5),
       zIndex: 5,
     });
   });
