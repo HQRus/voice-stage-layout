@@ -19,26 +19,20 @@ const shortTexts = [
   "Form follows feeling.",
   "Quiet confidence.",
   "Make it inevitable.",
-  "Light on the page.",
-  "Hold the moment.",
 ];
 
 const quotes = [
   "Design is intelligence made visible.",
   "Simplicity is the ultimate sophistication.",
-  "What you make is who you are.",
-  "The detail is not the detail. It makes the design.",
 ];
 
 const lorem =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\n";
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\n";
 
 const logoMarks = [
   { title: "AXIS", color: "#1a1a1a" },
   { title: "novel.", color: "#c44d3a" },
-  { title: "Ⓜ︎ MERIDIAN", color: "#2b5d4a" },
   { title: "form&", color: "#3a3a8a" },
-  { title: "◆ NORTH", color: "#0d0d0d" },
 ];
 
 let logoIdx = 0;
@@ -47,41 +41,42 @@ let gradIdx = 0;
 let quoteIdx = 0;
 
 export function makeItem(type: ItemType): MediaItem {
+  const base = { id: id(), type } as const;
   switch (type) {
     case "image":
-      return {
-        id: id(),
-        type,
-        content: gradients[gradIdx++ % gradients.length],
-      };
+      return { ...base, content: gradients[gradIdx++ % gradients.length] };
     case "video":
-      return {
-        id: id(),
-        type,
-        content: gradients[(gradIdx++ + 4) % gradients.length],
-      };
+      return { ...base, content: gradients[(gradIdx++ + 4) % gradients.length], meta: { title: "Untitled clip", duration: "0:15" } };
     case "text":
-      return {
-        id: id(),
-        type,
-        content: shortTexts[textIdx++ % shortTexts.length],
-      };
+      return { ...base, content: shortTexts[textIdx++ % shortTexts.length] };
     case "quote":
-      return {
-        id: id(),
-        type,
-        content: quotes[quoteIdx++ % quotes.length],
-      };
+      return { ...base, content: quotes[quoteIdx++ % quotes.length] };
     case "document":
-      return {
-        id: id(),
-        type,
-        content: lorem.repeat(8),
-      };
+      return { ...base, content: lorem.repeat(8), meta: { title: "Brief" } };
     case "logo": {
       const l = logoMarks[logoIdx++ % logoMarks.length];
-      return { id: id(), type, content: l.title, meta: { color: l.color } };
+      return { ...base, content: l.title, meta: { color: l.color } };
     }
+    case "concept":
+      return { ...base, content: "A calm, designy café where adoptable cats lounge like little art critics.", meta: { title: "Concept", tag: "Idea" } };
+    case "brandMark":
+      return { ...base, content: "Studio Whiskers", meta: { tagline: "Slow mornings, soft purrs.", accent: "#c98664" } };
+    case "palette":
+      return { ...base, content: "Calm warmth", meta: { swatches: ["#f7f1ea", "#e6d5c1", "#c98664", "#3a2e26", "#1a1614"] } };
+    case "typeSample":
+      return { ...base, content: "Aa", meta: { display: "Söhne Breit", body: "Inter", sample: "Soft mornings begin with a quiet purr." } };
+    case "audio":
+      return { ...base, content: gradients[2], meta: { title: "Soft jazz bed", artist: "Russ AI", duration: "1:42" } };
+    case "storyboardFrame":
+      return { ...base, content: gradients[gradIdx++ % gradients.length], meta: { caption: "Shot", frame: 1 } };
+    case "calendarSlot":
+      return { ...base, content: "3:00 PM", meta: { day: "Tomorrow", duration: "30 min", status: "open" } };
+    case "email":
+      return { ...base, content: "Sharing the cat café launch concept and a quick meeting note. Let me know what you think.", meta: { to: "boss@studio.com", subject: "Cat café concept + Wed 3pm" } };
+    case "chatMessage":
+      return { ...base, content: "Help me make a tiny brand for a pop-up cat café.", meta: { speaker: "You", time: "now" } };
+    case "section":
+      return { ...base, content: "Section", meta: {} };
   }
 }
 
@@ -89,3 +84,49 @@ export function randomMixedSet(count = 5): MediaItem[] {
   const types: ItemType[] = ["image", "video", "text", "quote", "image"];
   return Array.from({ length: count }, (_, i) => makeItem(types[i % types.length]));
 }
+
+// --- Builders used by scenarios ---
+export const make = {
+  concept: (title: string, body: string, tag: string) => ({
+    id: id(), type: "concept" as const, content: body, meta: { title, tag },
+  }),
+  brand: (name: string, tagline: string, accent = "#c98664") => ({
+    id: id(), type: "brandMark" as const, content: name, meta: { tagline, accent },
+  }),
+  palette: (name: string, swatches: string[]) => ({
+    id: id(), type: "palette" as const, content: name, meta: { swatches },
+  }),
+  typeSample: (display: string, body: string, sample: string) => ({
+    id: id(), type: "typeSample" as const, content: "Aa", meta: { display, body, sample },
+  }),
+  text: (s: string) => ({ id: id(), type: "text" as const, content: s }),
+  quote: (s: string) => ({ id: id(), type: "quote" as const, content: s }),
+  image: (grad?: string) => ({
+    id: id(), type: "image" as const,
+    content: grad ?? gradients[gradIdx++ % gradients.length],
+  }),
+  video: (title: string, duration = "0:15") => ({
+    id: id(), type: "video" as const,
+    content: gradients[3], meta: { title, duration },
+  }),
+  audio: (title: string, artist: string, duration: string) => ({
+    id: id(), type: "audio" as const, content: "", meta: { title, artist, duration },
+  }),
+  storyFrame: (n: number, caption: string, grad?: string) => ({
+    id: id(), type: "storyboardFrame" as const,
+    content: grad ?? gradients[(n - 1) % gradients.length],
+    meta: { frame: n, caption },
+  }),
+  slot: (day: string, time: string, duration = "30 min") => ({
+    id: id(), type: "calendarSlot" as const, content: time, meta: { day, duration, status: "open" },
+  }),
+  email: (to: string, subject: string, body: string) => ({
+    id: id(), type: "email" as const, content: body, meta: { to, subject },
+  }),
+  chat: (speaker: string, text: string, time: string) => ({
+    id: id(), type: "chatMessage" as const, content: text, meta: { speaker, time },
+  }),
+  section: (title: string) => ({
+    id: id(), type: "section" as const, content: title, meta: {},
+  }),
+};
