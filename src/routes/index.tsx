@@ -37,6 +37,17 @@ function Index() {
   const [rotationAmount, setRotationAmount] = useState(2);
   const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [mode, setMode] = useState<PanelMode>("agent");
+
+  function changeMode(m: PanelMode) {
+    if (m === mode) return;
+    setMode(m);
+    // Switching mode always clears the board so the two worlds don't bleed.
+    setItems([]);
+    setJsonOverride(null);
+    setScenarioId(null);
+    if (m === "manual") setIntent("auto");
+  }
 
   // Scenario playback
   const [scenarioId, setScenarioId] = useState<string | null>(null);
