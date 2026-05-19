@@ -151,4 +151,38 @@ export const make = {
   section: (title: string) => ({
     id: id(), type: "section" as const, content: title, meta: {},
   }),
+  weather: (location: string, temp: string, condition: string, high: number, low: number, icon = "cloud-sun") => ({
+    id: id(), type: "weather" as const, content: temp, meta: { location, condition, high, low, icon },
+  }),
+  stock: (symbol: string, name: string, price: string, change: string, changePct: string, up: boolean, spark: number[]) => ({
+    id: id(), type: "stock" as const, content: symbol, meta: { name, price, change, changePct, up, spark },
+  }),
+  map: (place: string, location: string, subtitle?: string) => ({
+    id: id(), type: "map" as const, content: place, meta: { location, subtitle },
+  }),
+  link: (title: string, domain: string, description: string, url: string) => ({
+    id: id(), type: "link" as const, content: title, meta: { domain, description, url },
+  }),
+  metric: (value: string, label: string, delta: string, up: boolean, sub?: string) => ({
+    id: id(), type: "metric" as const, content: value, meta: { label, delta, up, sub },
+  }),
+  chart: (title: string, bars: Array<{ l: string; v: number }>) => ({
+    id: id(), type: "chart" as const, content: title, meta: { bars },
+  }),
+  code: (code: string, language: string, filename: string) => ({
+    id: id(), type: "code" as const, content: code, meta: { language, filename },
+  }),
+  checklist: (title: string, items: Array<{ t: string; d: boolean }>) => ({
+    id: id(), type: "checklist" as const, content: title, meta: { items },
+  }),
+  product: (title: string, brand: string, price: string, rating: number, image?: string) => ({
+    id: id(), type: "product" as const, content: title,
+    meta: { brand, price, rating, image: image ?? gradients[gradIdx++ % gradients.length] },
+  }),
+  flight: (num: string, from: string, to: string, fromTime: string, toTime: string, duration: string, airline: string, date: string) => ({
+    id: id(), type: "flight" as const, content: num, meta: { from, to, fromTime, toTime, duration, airline, date },
+  }),
+  poll: (question: string, options: Array<{ l: string; v: number }>) => ({
+    id: id(), type: "poll" as const, content: question, meta: { options },
+  }),
 };
