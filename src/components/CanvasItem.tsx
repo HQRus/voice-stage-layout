@@ -7,12 +7,24 @@ interface Props {
   debug: boolean;
   viewport: Viewport;
   cornerRadius?: number;
+  shadowAmount?: number; // 0–100
 }
 
 // Renders a single positioned item. Dumb on purpose so the same renderer
 // works for rule-based or AI-driven (JSON) layouts.
-export function CanvasItem({ item, debug, viewport, cornerRadius = 16 }: Props) {
+export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmount = 30 }: Props) {
   const { x, y, width, height, rotation, zIndex } = item;
+  const isHero = item.layoutRole === "hero";
+  const k = shadowAmount / 100;
+  const blur1 = Math.round(6 + k * (isHero ? 60 : 30));
+  const blur2 = Math.round(2 + k * (isHero ? 18 : 10));
+  const y1 = Math.round(4 + k * (isHero ? 36 : 18));
+  const y2 = Math.round(1 + k * 4);
+  const a1 = (isHero ? 0.18 : 0.12) * k;
+  const a2 = (isHero ? 0.10 : 0.07) * k;
+  const boxShadow = shadowAmount === 0
+    ? "none"
+    : `0 ${y1}px ${blur1}px -${Math.round(blur1 / 3)}px rgba(15,15,20,${a1.toFixed(3)}), 0 ${y2}px ${blur2}px rgba(15,15,20,${a2.toFixed(3)})`;
 
   // Emerge from the center of the canvas
   const centerX = viewport.width / 2 - width / 2;
