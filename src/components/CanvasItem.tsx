@@ -563,15 +563,15 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
     case "checklist": {
       const list = (meta.items as Array<{ t: string; d: boolean }> | undefined) ?? [];
       return (
-        <div className={`w-full h-full ${shadow} bg-card p-6 flex flex-col`} style={radiusStyle}>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Checklist</div>
-          <div className="text-base text-foreground font-medium mt-1">{item.content}</div>
-          <div className="mt-4 space-y-2.5 overflow-y-auto">
+        <div className={`w-full h-full ${shadow} bg-card p-8 flex flex-col`} style={radiusStyle}>
+          <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Checklist</div>
+          <div className="text-2xl text-foreground font-semibold mt-1">{item.content}</div>
+          <div className="mt-6 space-y-4 overflow-y-auto">
             {list.map((it, i) => (
-              <div key={i} className="flex items-center gap-3 text-sm">
+              <div key={i} className="flex items-center gap-4 text-lg">
                 {it.d
-                  ? <CheckSquare className="w-4 h-4 text-accent shrink-0" />
-                  : <Square className="w-4 h-4 text-muted-foreground shrink-0" />}
+                  ? <CheckSquare className="w-6 h-6 text-accent shrink-0" />
+                  : <Square className="w-6 h-6 text-muted-foreground shrink-0" />}
                 <span className={it.d ? "text-muted-foreground line-through" : "text-foreground"}>{it.t}</span>
               </div>
             ))}
