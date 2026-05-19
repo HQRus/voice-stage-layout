@@ -33,6 +33,8 @@ interface Props {
   onOverlapAmount: (v: number) => void;
   cornerRadius: number;
   onCornerRadius: (v: number) => void;
+  shadowAmount: number;
+  onShadowAmount: (v: number) => void;
   rotationAmount: number;
   onRotationAmount: (v: number) => void;
   onApplyJson: (json: string) => void;
