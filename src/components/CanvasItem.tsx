@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Play, Pause, Calendar, Mail, Check } from "lucide-react";
+import { Play, Pause, Calendar, Mail, Check, CloudSun, TrendingUp, TrendingDown, MapPin, Link2, BarChart3, Code as CodeIcon, CheckSquare, Square, Plane, Star } from "lucide-react";
 import type { PositionedItem, Viewport } from "@/lib/layoutEngine";
 
 interface Props {
