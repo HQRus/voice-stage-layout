@@ -28,6 +28,7 @@ export function Canvas({
   overlapAmount,
   rotationAmount,
   cornerRadius,
+  shadowAmount,
   overrideFrames,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
