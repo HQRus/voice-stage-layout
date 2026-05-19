@@ -132,8 +132,9 @@ function stage(viewport: Viewport) {
   };
 }
 
-function heroLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function heroLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
+  const overlap = opts.overlapAmount ?? 0;
   if (items.length === 1) {
     const it = items[0];
     const isText = it.type === "text" || it.type === "quote";
@@ -148,7 +149,7 @@ function heroLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
         y: s.y + (s.h - h) / 2,
         width: w,
         height: h,
-        rotation: tilt(it.id, 2),
+        rotation: tilt(it.id, opts.rotationAmount ?? 2),
         zIndex: 10,
       },
     ];
@@ -167,21 +168,21 @@ function heroLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
     y: s.y + (s.h - heroH) / 2,
     width: heroW,
     height: heroH,
-    rotation: tilt(hero.id, 2),
+    rotation: tilt(hero.id, opts.rotationAmount ?? 2),
     zIndex: 10,
   };
-  const colX = s.x + heroW + s.w * 0.04;
-  const colW = s.w - heroW - s.w * 0.04;
-  const itemH = (s.h - (rest.length - 1) * 24) / Math.max(rest.length, 1);
+  const colX = s.x + heroW + s.w * 0.04 - overlap;
+  const colW = s.w - heroW - s.w * 0.04 + overlap;
+  const itemH = (s.h - (rest.length - 1) * Math.max(4, 24 - overlap)) / Math.max(rest.length, 1);
   const support = rest.map<PositionedItem>((it, i) => ({
     ...it,
     focusWeight: 0.6,
     layoutRole: "supporting",
     x: colX,
-    y: s.y + i * (itemH + 24),
+    y: s.y + i * (itemH + Math.max(4, 24 - overlap)),
     width: colW,
     height: itemH,
-    rotation: tilt(it.id, 2.5),
+    rotation: tilt(it.id, opts.rotationAmount ?? 2.5),
     zIndex: 5 - i,
   }));
   return [heroFrame, ...support].sort(
