@@ -44,6 +44,7 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
         left: 0,
         borderRadius: `${cornerRadius}px`,
         overflow: item.type === "section" ? "visible" : "hidden",
+        boxShadow,
       }}
       className="will-change-transform"
     >
