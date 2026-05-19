@@ -176,6 +176,24 @@ const travel: Scenario = {
       ],
     },
     {
+      label: "Flight options",
+      prompt: "Find me a flight Friday morning.",
+      intent: "moodboard",
+      items: [
+        make.flight("TP 204", "JFK", "LIS", "9:15 PM", "9:40 AM", "6h 25m", "TAP Air Portugal", "Fri Sep 12"),
+        make.flight("UA 9742", "EWR", "LIS", "7:55 PM", "8:20 AM", "6h 25m", "United", "Fri Sep 12"),
+      ],
+    },
+    {
+      label: "Weather + base",
+      prompt: "What's the weather, and where am I staying?",
+      intent: "moodboard",
+      items: [
+        make.weather("Lisbon", "78°", "Sunny", 81, 64, "sun"),
+        make.map("Memmo Alfama", "Lisbon, Portugal", "Travessa das Merceeiras 27"),
+      ],
+    },
+    {
       label: "Open times tomorrow",
       prompt: "When can I book a tour?",
       intent: "calendar",
@@ -194,6 +212,13 @@ const travel: Scenario = {
         make.text("Pastéis de Belém → MAAT → sunset at Miradouro de Santa Catarina."),
         make.section("Sunday"),
         make.text("Time Out Market → tram 28 → Alfama wander → fado dinner."),
+        make.section("Packing"),
+        make.checklist("Don't forget", [
+          { t: "Passport", d: true },
+          { t: "Plug adapter", d: true },
+          { t: "Light jacket (evenings)", d: false },
+          { t: "Comfy shoes for hills", d: false },
+        ]),
         make.section("Music"),
         make.audio("Fado playlist", "Russ AI", "42:10"),
       ],
