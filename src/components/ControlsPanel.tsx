@@ -45,11 +45,8 @@ export function ControlsPanel(p: Props) {
   return (
     <aside className="w-[320px] shrink-0 h-full border-l border-border bg-card/70 backdrop-blur flex flex-col">
       <div className="px-6 py-5 border-b border-border">
-        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-          Generative Layout
-        </div>
         <h1 className="font-display text-2xl text-foreground mt-1 leading-tight">
-          Composition Lab
+          Voice StagE
         </h1>
         <div className="text-xs text-muted-foreground mt-2">
           {p.itemCount} item{p.itemCount === 1 ? "" : "s"} on canvas
