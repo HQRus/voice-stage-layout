@@ -106,10 +106,7 @@ function Index() {
   };
 
   return (
-    <main
-      className="relative h-screen w-screen overflow-hidden bg-background"
-      onClick={() => setPanelOpen(false)}
-    >
+    <main className="relative h-screen w-screen overflow-hidden bg-background">
       <Canvas
         items={items}
         intent={intent}
@@ -122,8 +119,14 @@ function Index() {
         overrideFrames={jsonOverride}
       />
 
+      {/* Hover hot-zone on the right edge reveals the panel */}
+      <div
+        className="fixed top-0 right-0 h-full w-4 z-30"
+        onMouseEnter={() => setPanelOpen(true)}
+      />
+
       <button
-        onClick={(e) => { e.stopPropagation(); setPanelOpen((v) => !v); }}
+        onClick={() => setPanelOpen((v) => !v)}
         className="fixed top-5 right-5 z-50 w-11 h-11 rounded-full bg-card/90 backdrop-blur border border-border shadow-desk flex items-center justify-center text-foreground hover:bg-card transition"
         aria-label={panelOpen ? "Close controls" : "Open controls"}
       >
