@@ -78,19 +78,27 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
     case "video": {
       const title = String(meta.title ?? "");
       const duration = String(meta.duration ?? "");
+      const hasCaption = Boolean(title || duration);
+      const captionH = hasCaption ? 28 : 0;
       return (
-        <div
-          className={`w-full h-full ${shadow} overflow-hidden relative flex items-center justify-center`}
-          style={{ ...radiusStyle, background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)" }}
-        >
-          <div className="absolute inset-0 opacity-30" style={{ background: item.content }} />
-          <div className="relative w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
-            <Play className="w-6 h-6 text-black fill-black ml-0.5" />
+        <div className="w-full h-full flex flex-col">
+          <div
+            className="relative w-full flex items-center justify-center overflow-hidden"
+            style={{
+              ...radiusStyle,
+              height: `calc(100% - ${captionH}px)`,
+              background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
+            }}
+          >
+            <div className="absolute inset-0 opacity-30" style={{ background: item.content }} />
+            <div className="relative w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+              <Play className="w-6 h-6 text-black fill-black ml-0.5" />
+            </div>
           </div>
-          {(title || duration) && (
-            <div className="absolute bottom-4 left-4 right-4 text-white/85 text-xs tracking-wider flex items-center justify-between">
-              <span className="font-medium">{title}</span>
-              <span className="tabular-nums opacity-70">{duration}</span>
+          {hasCaption && (
+            <div className="pt-2 px-1 text-[11px] tracking-wider flex items-center justify-between text-foreground/75" style={{ height: captionH }}>
+              <span className="font-medium truncate">{title}</span>
+              <span className="tabular-nums opacity-70 shrink-0 ml-3">{duration}</span>
             </div>
           )}
         </div>
