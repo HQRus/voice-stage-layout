@@ -315,8 +315,9 @@ function moodboardLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): 
   );
 }
 
-function documentLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function documentLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
+  const overlap = opts.overlapAmount ?? 0;
   const doc = items.find((i) => i.type === "document") ?? items[0];
   const others = items.filter((i) => i !== doc);
   const docW = others.length > 0 ? s.w * 0.6 : Math.min(s.w * 0.55, 720);
@@ -330,23 +331,23 @@ function documentLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: s.y + (s.h - docH) / 2,
       width: docW,
       height: docH,
-      rotation: tilt(doc.id, 1.2),
+      rotation: tilt(doc.id, opts.rotationAmount ?? 1.2),
       zIndex: 10,
     },
   ];
-  const colX = s.x + docW + s.w * 0.04;
-  const colW = s.w - docW - s.w * 0.04;
+  const colX = s.x + docW + s.w * 0.04 - overlap;
+  const colW = s.w - docW - s.w * 0.04 + overlap;
   others.forEach((it, i) => {
-    const h = (s.h - (others.length - 1) * 24) / Math.max(others.length, 1);
+    const h = (s.h - (others.length - 1) * Math.max(4, 24 - overlap)) / Math.max(others.length, 1);
     frames.push({
       ...it,
       focusWeight: 0.6,
       layoutRole: "supporting",
       x: colX,
-      y: s.y + i * (h + 24),
+      y: s.y + i * (h + Math.max(4, 24 - overlap)),
       width: colW,
       height: h,
-      rotation: tilt(it.id, 2),
+      rotation: tilt(it.id, opts.rotationAmount ?? 2),
       zIndex: 5 - i,
     });
   });
