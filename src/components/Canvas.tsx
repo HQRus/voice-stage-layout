@@ -25,7 +25,9 @@ export function Canvas({
   intent,
   debug,
   equalSpacing,
-  allowOverlap,
+  overlapAmount,
+  rotationAmount,
+  cornerRadius,
   overrideFrames,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -43,7 +45,7 @@ export function Canvas({
 
   const frames =
     overrideFrames ??
-    generateLayout(items, size, { intent, equalSpacing, allowOverlap });
+    generateLayout(items, size, { intent, equalSpacing, overlapAmount, rotationAmount });
 
   return (
     <div
