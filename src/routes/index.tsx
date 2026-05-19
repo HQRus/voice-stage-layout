@@ -106,7 +106,7 @@ function Index() {
   };
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-background">
+    <main className="relative h-screen w-screen overflow-hidden">
       <Canvas
         items={items}
         intent={intent}
@@ -121,7 +121,7 @@ function Index() {
 
       {/* Hover hot-zone on the right edge reveals the panel */}
       <div
-        className="fixed top-0 right-0 h-full w-12 z-30"
+        className="fixed top-0 right-0 h-full w-32 z-30"
         onMouseEnter={() => setPanelOpen(true)}
       />
 

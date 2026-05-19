@@ -53,7 +53,7 @@ export function Canvas({
   return (
     <div
       ref={ref}
-      className={`relative w-full h-full bg-background ${scrollable ? "overflow-y-auto" : "overflow-hidden"}`}
+      className={`relative w-full h-full ${scrollable ? "overflow-y-auto" : "overflow-hidden"}`}
     >
       {debug && (
         <>
