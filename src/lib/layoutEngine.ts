@@ -125,6 +125,12 @@ export function inferIntent(items: MediaItem[]): LayoutIntent {
   if (has("brandMark") || (has("palette") && has("typeSample"))) return "brandBoard";
   if (all("concept") && items.length === 3) return "concepts";
 
+  // iconic widgets — single → centered card, multi → moodboard
+  const widgetTypes: ItemType[] = ["weather","stock","map","link","metric","chart","code","checklist","product","flight","poll"];
+  const isWidget = (t: ItemType) => widgetTypes.includes(t);
+  if (items.length === 1 && isWidget(items[0].type)) return "confirmation";
+  if (items.every((i) => isWidget(i.type))) return "moodboard";
+
   const logos = count("logo");
   const docs = count("document");
   const images = count("image") + count("video");
