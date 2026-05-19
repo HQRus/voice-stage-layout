@@ -59,7 +59,8 @@ export interface Viewport {
 export interface LayoutOptions {
   intent: LayoutIntent;
   equalSpacing?: boolean;
-  allowOverlap?: boolean;
+  overlapAmount?: number;
+  rotationAmount?: number;
 }
 
 // ------------------------------------------------------------
@@ -131,8 +132,9 @@ function stage(viewport: Viewport) {
   };
 }
 
-function heroLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function heroLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
+  const overlap = opts.overlapAmount ?? 0;
   if (items.length === 1) {
     const it = items[0];
     const isText = it.type === "text" || it.type === "quote";
@@ -147,7 +149,7 @@ function heroLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
         y: s.y + (s.h - h) / 2,
         width: w,
         height: h,
-        rotation: tilt(it.id, 2),
+        rotation: tilt(it.id, opts.rotationAmount ?? 2),
         zIndex: 10,
       },
     ];
@@ -166,21 +168,21 @@ function heroLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
     y: s.y + (s.h - heroH) / 2,
     width: heroW,
     height: heroH,
-    rotation: tilt(hero.id, 2),
+    rotation: tilt(hero.id, opts.rotationAmount ?? 2),
     zIndex: 10,
   };
-  const colX = s.x + heroW + s.w * 0.04;
-  const colW = s.w - heroW - s.w * 0.04;
-  const itemH = (s.h - (rest.length - 1) * 24) / Math.max(rest.length, 1);
+  const colX = s.x + heroW + s.w * 0.04 - overlap;
+  const colW = s.w - heroW - s.w * 0.04 + overlap;
+  const itemH = (s.h - (rest.length - 1) * Math.max(4, 24 - overlap)) / Math.max(rest.length, 1);
   const support = rest.map<PositionedItem>((it, i) => ({
     ...it,
     focusWeight: 0.6,
     layoutRole: "supporting",
     x: colX,
-    y: s.y + i * (itemH + 24),
+    y: s.y + i * (itemH + Math.max(4, 24 - overlap)),
     width: colW,
     height: itemH,
-    rotation: tilt(it.id, 2.5),
+    rotation: tilt(it.id, opts.rotationAmount ?? 2.5),
     zIndex: 5 - i,
   }));
   return [heroFrame, ...support].sort(
@@ -193,13 +195,13 @@ function heroLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
 function equalLayout(
   items: MediaItem[],
   v: Viewport,
-  opts: { square?: boolean } = {},
+  opts: LayoutOptions & { square?: boolean } = { intent: "auto" },
 ): PositionedItem[] {
   const s = stage(v);
   const n = items.length;
   const cols = Math.ceil(Math.sqrt(n * (s.w / s.h)));
   const rows = Math.ceil(n / cols);
-  const gap = 28;
+  const gap = Math.max(0, 28 - (opts.overlapAmount ?? 0));
   const cellW = (s.w - gap * (cols - 1)) / cols;
   const cellH = (s.h - gap * (rows - 1)) / rows;
   const side = opts.square ? Math.min(cellW, cellH) : null;
@@ -222,11 +224,12 @@ function equalLayout(
   });
 }
 
-function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function editorialLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
+  const overlap = opts.overlapAmount ?? 0;
   const visual = items.find((i) => i.type === "image" || i.type === "video");
   const others = items.filter((i) => i !== visual);
-  if (!visual) return moodboardLayout(items, v);
+  if (!visual) return moodboardLayout(items, v, opts);
   const heroW = s.w * 0.58;
   const heroH = s.h * 0.85;
   const frames: PositionedItem[] = [
@@ -238,12 +241,12 @@ function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: s.y + (s.h - heroH) / 2,
       width: heroW,
       height: heroH,
-      rotation: tilt(visual.id, 1.5),
+      rotation: tilt(visual.id, opts.rotationAmount ?? 1.5),
       zIndex: 8,
     },
   ];
-  const colX = s.x + heroW + s.w * 0.05;
-  const colW = s.w - heroW - s.w * 0.05;
+  const colX = s.x + heroW + s.w * 0.05 - overlap;
+  const colW = s.w - heroW - s.w * 0.05 + overlap;
   others.forEach((it, i) => {
     const h = it.type === "document" ? s.h * 0.7 : s.h * 0.35;
     frames.push({
@@ -251,10 +254,10 @@ function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       focusWeight: 0.7,
       layoutRole: "supporting",
       x: colX,
-      y: s.y + i * (h + 24) + 20,
+      y: s.y + i * (h + Math.max(4, 24 - overlap)) + 20,
       width: colW,
       height: h,
-      rotation: tilt(it.id, 2),
+      rotation: tilt(it.id, opts.rotationAmount ?? 2),
       zIndex: 5 - i,
     });
   });
@@ -265,9 +268,10 @@ function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   );
 }
 
-function moodboardLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function moodboardLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
   const n = items.length;
+  const overlap = opts.overlapAmount ?? 0;
   // Pack via weighted "shelves" — feels like a desktop, not a strict grid.
   // Sort by weight to anchor the strongest item, then distribute.
   const ordered = items
@@ -277,7 +281,7 @@ function moodboardLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   // Grid columns scale gently with item count.
   const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : 4;
   const rows = Math.ceil(n / cols);
-  const gap = 32;
+  const gap = Math.max(0, 32 - overlap);
   const cellW = (s.w - gap * (cols - 1)) / cols;
   const cellH = (s.h - gap * (rows - 1)) / rows;
 
@@ -299,7 +303,7 @@ function moodboardLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: s.y + r * (cellH + gap) + (cellH - h) / 2 + jitterY,
       width: w,
       height: h,
-      rotation: tilt(it.id, 3.5),
+      rotation: tilt(it.id, opts.rotationAmount ?? 3.5),
       zIndex: Math.round(weight * 10),
     });
   });
@@ -311,8 +315,9 @@ function moodboardLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   );
 }
 
-function documentLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function documentLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
+  const overlap = opts.overlapAmount ?? 0;
   const doc = items.find((i) => i.type === "document") ?? items[0];
   const others = items.filter((i) => i !== doc);
   const docW = others.length > 0 ? s.w * 0.6 : Math.min(s.w * 0.55, 720);
@@ -326,23 +331,23 @@ function documentLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: s.y + (s.h - docH) / 2,
       width: docW,
       height: docH,
-      rotation: tilt(doc.id, 1.2),
+      rotation: tilt(doc.id, opts.rotationAmount ?? 1.2),
       zIndex: 10,
     },
   ];
-  const colX = s.x + docW + s.w * 0.04;
-  const colW = s.w - docW - s.w * 0.04;
+  const colX = s.x + docW + s.w * 0.04 - overlap;
+  const colW = s.w - docW - s.w * 0.04 + overlap;
   others.forEach((it, i) => {
-    const h = (s.h - (others.length - 1) * 24) / Math.max(others.length, 1);
+    const h = (s.h - (others.length - 1) * Math.max(4, 24 - overlap)) / Math.max(others.length, 1);
     frames.push({
       ...it,
       focusWeight: 0.6,
       layoutRole: "supporting",
       x: colX,
-      y: s.y + i * (h + 24),
+      y: s.y + i * (h + Math.max(4, 24 - overlap)),
       width: colW,
       height: h,
-      rotation: tilt(it.id, 2),
+      rotation: tilt(it.id, opts.rotationAmount ?? 2),
       zIndex: 5 - i,
     });
   });
@@ -353,10 +358,11 @@ function documentLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   );
 }
 
-function presentationLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function presentationLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   // Centered title-style composition: one big focal item + balanced supports
   const s = stage(v);
-  if (items.length <= 1) return heroLayout(items, v);
+  const overlap = opts.overlapAmount ?? 0;
+  if (items.length <= 1) return heroLayout(items, v, opts);
   const [first, ...rest] = items;
   const titleH = s.h * 0.35;
   const frames: PositionedItem[] = [
@@ -375,7 +381,7 @@ function presentationLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   const restY = s.y + titleH + 32;
   const restH = s.h - titleH - 32;
   const cols = rest.length;
-  const gap = 24;
+  const gap = Math.max(0, 24 - overlap);
   const cw = (s.w - gap * (cols - 1)) / cols;
   rest.forEach((it, i) => {
     frames.push({
@@ -386,7 +392,7 @@ function presentationLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: restY,
       width: cw,
       height: restH,
-      rotation: tilt(it.id, 1.5),
+      rotation: tilt(it.id, opts.rotationAmount ?? 1.5),
       zIndex: 5,
     });
   });
@@ -405,36 +411,32 @@ export function generateLayout(
   let intent = options.intent;
   if (intent === "auto") intent = inferIntent(items);
 
-  if (options.equalSpacing) return equalLayout(items, viewport);
+  if (options.equalSpacing) return equalLayout(items, viewport, options);
 
   let frames: PositionedItem[];
   switch (intent) {
     case "hero":
-      frames = heroLayout(items, viewport);
+      frames = heroLayout(items, viewport, options);
       break;
     case "equal":
-      frames = equalLayout(items, viewport);
+      frames = equalLayout(items, viewport, options);
       break;
     case "logos":
-      frames = equalLayout(items, viewport, { square: true });
+      frames = equalLayout(items, viewport, { ...options, square: true });
       break;
     case "editorial":
-      frames = editorialLayout(items, viewport);
+      frames = editorialLayout(items, viewport, options);
       break;
     case "document":
-      frames = documentLayout(items, viewport);
+      frames = documentLayout(items, viewport, options);
       break;
     case "presentation":
-      frames = presentationLayout(items, viewport);
+      frames = presentationLayout(items, viewport, options);
       break;
     case "moodboard":
     default:
-      frames = moodboardLayout(items, viewport);
+      frames = moodboardLayout(items, viewport, options);
   }
 
-  if (!options.allowOverlap) {
-    // Flatten rotations & remove jitter for a clean grid feel
-    frames = frames.map((f) => ({ ...f, rotation: 0 }));
-  }
   return frames;
 }

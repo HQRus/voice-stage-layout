@@ -31,7 +31,9 @@ function Index() {
   const [intent, setIntent] = useState<LayoutIntent>("auto");
   const [debug, setDebug] = useState(false);
   const [equalSpacing, setEqualSpacing] = useState(false);
-  const [allowOverlap, setAllowOverlap] = useState(true);
+  const [overlapAmount, setOverlapAmount] = useState(0);
+  const [cornerRadius, setCornerRadius] = useState(16);
+  const [rotationAmount, setRotationAmount] = useState(3.5);
   const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(
     null,
   );
@@ -88,7 +90,9 @@ function Index() {
         intent={intent}
         debug={debug}
         equalSpacing={equalSpacing}
-        allowOverlap={allowOverlap}
+        overlapAmount={overlapAmount}
+        rotationAmount={rotationAmount}
+        cornerRadius={cornerRadius}
         overrideFrames={jsonOverride}
       />
 
@@ -131,8 +135,12 @@ function Index() {
               onDebug={setDebug}
               equalSpacing={equalSpacing}
               onEqualSpacing={setEqualSpacing}
-              allowOverlap={allowOverlap}
-              onAllowOverlap={setAllowOverlap}
+              overlapAmount={overlapAmount}
+              onOverlapAmount={setOverlapAmount}
+              cornerRadius={cornerRadius}
+              onCornerRadius={setCornerRadius}
+              rotationAmount={rotationAmount}
+              onRotationAmount={setRotationAmount}
               onApplyJson={applyJson}
               onClearJson={() => setJsonOverride(null)}
               jsonActive={jsonOverride !== null}

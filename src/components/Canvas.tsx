@@ -13,7 +13,9 @@ interface Props {
   intent: LayoutIntent;
   debug: boolean;
   equalSpacing: boolean;
-  allowOverlap: boolean;
+  overlapAmount: number;
+  rotationAmount: number;
+  cornerRadius: number;
   // Optional override — when present, bypasses the rule-based engine.
   overrideFrames?: PositionedItem[] | null;
 }
@@ -23,7 +25,9 @@ export function Canvas({
   intent,
   debug,
   equalSpacing,
-  allowOverlap,
+  overlapAmount,
+  rotationAmount,
+  cornerRadius,
   overrideFrames,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -41,7 +45,7 @@ export function Canvas({
 
   const frames =
     overrideFrames ??
-    generateLayout(items, size, { intent, equalSpacing, allowOverlap });
+    generateLayout(items, size, { intent, equalSpacing, overlapAmount, rotationAmount });
 
   return (
     <div
@@ -57,7 +61,7 @@ export function Canvas({
 
       <AnimatePresence mode="popLayout">
         {frames.map((f) => (
-          <CanvasItem key={f.id} item={f} debug={debug} viewport={size} />
+          <CanvasItem key={f.id} item={f} debug={debug} viewport={size} cornerRadius={cornerRadius} />
         ))}
       </AnimatePresence>
 
