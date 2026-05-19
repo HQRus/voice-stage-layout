@@ -59,7 +59,8 @@ export interface Viewport {
 export interface LayoutOptions {
   intent: LayoutIntent;
   equalSpacing?: boolean;
-  allowOverlap?: boolean;
+  overlapAmount?: number;
+  rotationAmount?: number;
 }
 
 // ------------------------------------------------------------
