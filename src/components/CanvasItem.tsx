@@ -231,22 +231,52 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
       const title = String(meta.title ?? "Untitled");
       const artist = String(meta.artist ?? "");
       const duration = String(meta.duration ?? "");
+      const w = item.width;
+      const h = item.height;
+
+      // Size tiers based on the dynamic bounding box
+      const tier: "micro" | "compact" | "regular" | "wide" =
+        w < 180 || h < 70 ? "micro"
+        : w < 280 ? "compact"
+        : w < 460 ? "regular"
+        : "wide";
+
+      const pad = tier === "micro" ? "px-3 py-2" : tier === "compact" ? "px-4 py-3" : "px-6 py-5";
+      const gap = tier === "micro" ? "gap-2" : tier === "compact" ? "gap-3" : "gap-5";
+      const btn = tier === "micro" ? 32 : tier === "compact" ? 40 : 48;
+      const titleSize = tier === "micro" ? "text-xs" : tier === "compact" ? "text-sm" : "text-sm";
+      const showArtist = tier !== "micro" && h >= 72;
+      const showWave = h >= 80 && w >= 200;
+      const showDuration = tier !== "micro" && w >= 240;
+      // wave bar count scales with width
+      const barCount = Math.max(12, Math.min(64, Math.floor((w - btn - 80) / 5)));
+      const waveH = Math.max(18, Math.min(40, h * 0.28));
+
       return (
-        <div className={`w-full h-full ${shadow} bg-card px-6 py-5 flex items-center gap-5`} style={radiusStyle}>
-          <button className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center shrink-0">
-            <Play className="w-5 h-5 fill-current ml-0.5" />
+        <div className={`w-full h-full ${shadow} bg-card ${pad} flex items-center ${gap} min-w-0`} style={radiusStyle}>
+          <button
+            className="rounded-full bg-foreground text-background flex items-center justify-center shrink-0"
+            style={{ width: btn, height: btn }}
+          >
+            <Play style={{ width: btn * 0.42, height: btn * 0.42 }} className="fill-current ml-[1px]" />
           </button>
           <div className="flex-1 min-w-0">
-            <div className="text-sm text-foreground font-medium truncate">{title}</div>
-            <div className="text-xs text-muted-foreground">{artist}</div>
-            <div className="mt-3 flex items-end gap-[2px] h-8">
-              {Array.from({ length: 48 }).map((_, i) => {
-                const h = 30 + Math.sin(i * 0.6) * 30 + (i % 5) * 6;
-                return <span key={i} className="w-[3px] bg-accent/70 rounded-full" style={{ height: `${Math.max(8, Math.min(100, h))}%` }} />;
-              })}
-            </div>
+            <div className={`${titleSize} text-foreground font-medium truncate`}>{title}</div>
+            {showArtist && artist && (
+              <div className="text-xs text-muted-foreground truncate">{artist}</div>
+            )}
+            {showWave && (
+              <div className="mt-2 flex items-end gap-[2px]" style={{ height: waveH }}>
+                {Array.from({ length: barCount }).map((_, i) => {
+                  const hh = 30 + Math.sin(i * 0.6) * 30 + (i % 5) * 6;
+                  return <span key={i} className="w-[3px] bg-accent/70 rounded-full" style={{ height: `${Math.max(8, Math.min(100, hh))}%` }} />;
+                })}
+              </div>
+            )}
           </div>
-          <div className="text-xs text-muted-foreground tabular-nums shrink-0">{duration}</div>
+          {showDuration && duration && (
+            <div className="text-xs text-muted-foreground tabular-nums shrink-0">{duration}</div>
+          )}
         </div>
       );
     }
