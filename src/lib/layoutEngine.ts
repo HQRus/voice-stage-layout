@@ -195,7 +195,7 @@ function heroLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): Posit
 function equalLayout(
   items: MediaItem[],
   v: Viewport,
-  opts: LayoutOptions & { square?: boolean } = {},
+  opts: LayoutOptions & { square?: boolean } = { intent: "auto" },
 ): PositionedItem[] {
   const s = stage(v);
   const n = items.length;
