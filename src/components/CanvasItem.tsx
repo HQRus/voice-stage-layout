@@ -61,7 +61,7 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
 }
 
 function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadius: number }) {
-  const shadow = item.layoutRole === "hero" ? "shadow-desk-hero" : "shadow-desk";
+  const shadow = ""; // box-shadow now applied on the outer motion.div via shadowAmount
   const radiusStyle = { borderRadius: `${cornerRadius}px` };
   const meta = (item.meta ?? {}) as Record<string, unknown>;
 
