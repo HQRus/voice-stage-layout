@@ -150,7 +150,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    background-image: url("@/assets/background.webp");
+    background-image: url("@/assets/background.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
