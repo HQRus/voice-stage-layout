@@ -309,6 +309,20 @@ const pitch: Scenario = {
       ],
     },
     {
+      label: "Traction snapshot",
+      prompt: "Show the traction numbers.",
+      intent: "moodboard",
+      items: [
+        make.metric("$14k", "MRR", "+38% WoW", true, "9 weeks since launch"),
+        make.metric("420", "Active teams", "+72", true, "vs. last week"),
+        make.chart("Weekly signups", [
+          { l: "W1", v: 18 }, { l: "W2", v: 27 }, { l: "W3", v: 35 },
+          { l: "W4", v: 44 }, { l: "W5", v: 52 }, { l: "W6", v: 61 },
+          { l: "W7", v: 70 }, { l: "W8", v: 78 }, { l: "W9", v: 92 },
+        ]),
+      ],
+    },
+    {
       label: "Deck — investor view",
       prompt: "Compile the seed deck.",
       intent: "presentationKit",
@@ -318,7 +332,12 @@ const pitch: Scenario = {
         make.section("Solution"),
         make.text("Loop is one surface for tasks, docs, and decisions — keyboard-first."),
         make.section("Traction"),
-        make.text("420 teams · 38% WoW active · $14k MRR in 9 weeks."),
+        make.metric("$14k", "MRR", "+38% WoW", true, "9 weeks since launch"),
+        make.chart("Weekly signups", [
+          { l: "W1", v: 18 }, { l: "W2", v: 27 }, { l: "W3", v: 35 },
+          { l: "W4", v: 44 }, { l: "W5", v: 52 }, { l: "W6", v: 61 },
+          { l: "W7", v: 70 }, { l: "W8", v: 78 }, { l: "W9", v: 92 },
+        ]),
         make.section("Ask"),
         make.text("$2.5M seed. 18 months runway. Hire 4 engineers + design."),
       ],
