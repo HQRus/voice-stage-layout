@@ -164,6 +164,8 @@ function Index() {
               onOverlapAmount={setOverlapAmount}
               cornerRadius={cornerRadius}
               onCornerRadius={setCornerRadius}
+              shadowAmount={shadowAmount}
+              onShadowAmount={setShadowAmount}
               rotationAmount={rotationAmount}
               onRotationAmount={setRotationAmount}
               onApplyJson={applyJson}
