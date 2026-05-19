@@ -32,7 +32,7 @@ function Index() {
   const [debug, setDebug] = useState(false);
   const [equalSpacing, setEqualSpacing] = useState(false);
   const [overlapAmount, setOverlapAmount] = useState(0);
-  const [cornerRadius, setCornerRadius] = useState(16);
+  const [cornerRadius, setCornerRadius] = useState(56);
   const [shadowAmount, setShadowAmount] = useState(35);
   const [rotationAmount, setRotationAmount] = useState(2);
   const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(null);
