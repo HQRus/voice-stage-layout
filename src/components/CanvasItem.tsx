@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Play } from "lucide-react";
 import type { PositionedItem, Viewport } from "@/lib/layoutEngine";
 
@@ -6,12 +6,13 @@ interface Props {
   item: PositionedItem;
   debug: boolean;
   viewport: Viewport;
+  cornerRadius?: number;
 }
 
 // Renders a single positioned media item.
 // All position/size/rotation come from the layout engine; this component is
 // dumb on purpose so the same renderer works for rule-based or AI-driven layouts.
-export function CanvasItem({ item, debug, viewport }: Props) {
+export function CanvasItem({ item, debug, viewport, cornerRadius = 16 }: Props) {
   const { x, y, width, height, rotation, zIndex } = item;
 
   // Emerge from the center of the canvas
@@ -51,10 +52,17 @@ export function CanvasItem({ item, debug, viewport }: Props) {
         damping: 22,
         mass: 0.9,
       }}
-      style={{ position: "absolute", zIndex, top: 0, left: 0 }}
+      style={{
+        position: "absolute",
+        zIndex,
+        top: 0,
+        left: 0,
+        borderRadius: `${cornerRadius}px`,
+        overflow: "hidden",
+      }}
       className="will-change-transform"
     >
-      <ItemContent item={item} />
+      <ItemContent item={item} cornerRadius={cornerRadius} />
       {debug && (
         <div className="absolute -top-3 -left-1 text-[10px] uppercase tracking-widest bg-foreground text-background px-1.5 py-0.5 rounded-sm">
           {item.type} · {item.layoutRole}
@@ -67,25 +75,27 @@ export function CanvasItem({ item, debug, viewport }: Props) {
   );
 }
 
-function ItemContent({ item }: { item: PositionedItem }) {
-  const radius = "rounded-3xl";
+function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadius: number }) {
   const shadow =
     item.layoutRole === "hero" ? "shadow-desk-hero" : "shadow-desk";
+
+  const radiusStyle = { borderRadius: `${cornerRadius}px` };
 
   switch (item.type) {
     case "image":
       return (
         <div
-          className={`w-full h-full ${radius} ${shadow} overflow-hidden bg-card`}
-          style={{ background: item.content }}
+          className={`w-full h-full ${shadow} overflow-hidden bg-card`}
+          style={{ ...radiusStyle, background: item.content }}
         />
       );
 
     case "video":
       return (
         <div
-          className={`w-full h-full ${radius} ${shadow} overflow-hidden relative flex items-center justify-center`}
+          className={`w-full h-full ${shadow} overflow-hidden relative flex items-center justify-center`}
           style={{
+            ...radiusStyle,
             background:
               "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
           }}
@@ -118,7 +128,8 @@ function ItemContent({ item }: { item: PositionedItem }) {
       const fontSize = Math.max(24, Math.min(72, Math.sqrt(area) / 8));
       return (
         <div
-          className={`w-full h-full ${radius} ${shadow} bg-card p-10 flex flex-col justify-center font-serif-display text-foreground`}
+          className={`w-full h-full ${shadow} bg-card p-10 flex flex-col justify-center font-serif-display text-foreground`}
+          style={radiusStyle}
         >
           <div className="text-accent text-5xl leading-none mb-2">"</div>
           <p className="leading-[1.1] tracking-tight" style={{ fontSize }}>
@@ -131,7 +142,8 @@ function ItemContent({ item }: { item: PositionedItem }) {
     case "document":
       return (
         <div
-          className={`w-full h-full ${radius} ${shadow} bg-card overflow-hidden flex flex-col`}
+          className={`w-full h-full ${shadow} bg-card overflow-hidden flex flex-col`}
+          style={radiusStyle}
         >
           <div className="px-8 pt-7 pb-3 border-b border-border/60">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -151,7 +163,8 @@ function ItemContent({ item }: { item: PositionedItem }) {
       const color = item.meta?.color ?? "#111";
       return (
         <div
-          className={`w-full h-full ${radius} ${shadow} bg-card flex items-center justify-center p-6`}
+          className={`w-full h-full ${shadow} bg-card flex items-center justify-center p-6`}
+          style={radiusStyle}
         >
           <div
             className="font-display tracking-tight"
