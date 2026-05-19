@@ -33,6 +33,7 @@ function Index() {
   const [equalSpacing, setEqualSpacing] = useState(false);
   const [overlapAmount, setOverlapAmount] = useState(0);
   const [cornerRadius, setCornerRadius] = useState(16);
+  const [shadowAmount, setShadowAmount] = useState(35);
   const [rotationAmount, setRotationAmount] = useState(2);
   const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -117,6 +118,7 @@ function Index() {
         overlapAmount={overlapAmount}
         rotationAmount={rotationAmount}
         cornerRadius={cornerRadius}
+        shadowAmount={shadowAmount}
         overrideFrames={jsonOverride}
       />
 
@@ -162,6 +164,8 @@ function Index() {
               onOverlapAmount={setOverlapAmount}
               cornerRadius={cornerRadius}
               onCornerRadius={setCornerRadius}
+              shadowAmount={shadowAmount}
+              onShadowAmount={setShadowAmount}
               rotationAmount={rotationAmount}
               onRotationAmount={setRotationAmount}
               onApplyJson={applyJson}
