@@ -38,6 +38,23 @@ function Index() {
   const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [mode, setMode] = useState<PanelMode>("agent");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = (typeof localStorage !== "undefined" && localStorage.getItem("theme")) as
+      | "light" | "dark" | null;
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+    }
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    try { localStorage.setItem("theme", next); } catch {}
+  }
 
   function changeMode(m: PanelMode) {
     if (m === mode) return;
