@@ -43,7 +43,7 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
         top: 0,
         left: 0,
         borderRadius: `${cornerRadius}px`,
-        overflow: item.type === "section" ? "visible" : "hidden",
+        overflow: (item.type === "section" || item.type === "storyboardFrame" || item.type === "video") ? "visible" : "hidden",
         boxShadow,
       }}
       className="will-change-transform"
