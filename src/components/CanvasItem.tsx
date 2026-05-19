@@ -254,16 +254,22 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
     case "storyboardFrame": {
       const frame = Number(meta.frame ?? 0);
       const caption = String(meta.caption ?? "");
+      const captionH = caption ? 44 : 0;
       return (
-        <div className={`w-full h-full ${shadow} bg-card overflow-hidden flex flex-col`} style={radiusStyle}>
-          <div className="relative flex-1" style={{ background: item.content }}>
+        <div className="w-full h-full flex flex-col">
+          <div
+            className="relative w-full overflow-hidden bg-card"
+            style={{ ...radiusStyle, height: `calc(100% - ${captionH}px)`, background: item.content }}
+          >
             <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-background/85 text-[11px] tabular-nums font-medium text-foreground">
               {String(frame).padStart(2, "0")}
             </div>
           </div>
-          <div className="px-4 py-3 text-xs text-foreground/80 leading-snug border-t border-border/60 min-h-[52px]">
-            {caption}
-          </div>
+          {caption && (
+            <div className="pt-2 px-1 text-xs text-foreground/75 leading-snug" style={{ height: captionH }}>
+              {caption}
+            </div>
+          )}
         </div>
       );
     }
