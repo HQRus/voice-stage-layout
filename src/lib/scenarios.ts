@@ -535,4 +535,231 @@ const recipe: Scenario = {
   ],
 };
 
-export const scenarios: Scenario[] = [catCafe, travel, album, pitch, wedding, support, recipe];
+// ----------------------------------------------------------------
+// Morning briefing — daily standup with AI
+// ----------------------------------------------------------------
+const briefing: Scenario = {
+  id: "briefing",
+  name: "Morning briefing",
+  states: [
+    {
+      label: "Good morning",
+      prompt: "What's my morning look like?",
+      intent: "confirmation",
+      items: [
+        make.weather("San Francisco", "62°", "Foggy, clearing by noon", 71, 56, "cloud-sun"),
+      ],
+    },
+    {
+      label: "Markets",
+      prompt: "How are the markets?",
+      intent: "moodboard",
+      items: [
+        make.stock("AAPL", "Apple Inc.", "212.48", "+2.14", "+1.02%", true, [10,12,11,14,13,16,15,18,17,20,22,21,24]),
+        make.stock("NVDA", "NVIDIA", "1184.20", "+38.40", "+3.35%", true, [40,42,45,44,48,52,56,60,64,68,72,78,84]),
+        make.stock("TSLA", "Tesla", "178.92", "-4.18", "-2.28%", false, [30,28,29,26,27,24,25,22,23,20,21,19,18]),
+      ],
+    },
+    {
+      label: "Today's focus",
+      prompt: "What should I focus on?",
+      intent: "confirmation",
+      items: [
+        make.checklist("Today", [
+          { t: "Ship onboarding redesign", d: false },
+          { t: "Review Q3 roadmap", d: false },
+          { t: "1:1 with Priya", d: true },
+          { t: "Reply to investor email", d: false },
+        ]),
+      ],
+    },
+    {
+      label: "Top read",
+      prompt: "What should I read?",
+      intent: "confirmation",
+      items: [
+        make.link(
+          "How small teams ship faster than big ones",
+          "stratechery.com",
+          "A long read on org design, async work, and why 6-person teams keep outpacing 60-person ones.",
+          "https://stratechery.com/2026/small-teams",
+        ),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// Launch dashboard — post-launch metrics review
+// ----------------------------------------------------------------
+const launchDash: Scenario = {
+  id: "launch-dash",
+  name: "Launch dashboard",
+  states: [
+    {
+      label: "Top-line metrics",
+      prompt: "How did launch day go?",
+      intent: "moodboard",
+      items: [
+        make.metric("$42.8k", "Day-1 revenue", "+18.2%", true, "vs. forecast"),
+        make.metric("1,284", "New signups", "+312", true, "best day ever"),
+        make.metric("3.4%", "Activation rate", "-0.6%", false, "watch onboarding"),
+      ],
+    },
+    {
+      label: "Signups by hour",
+      prompt: "Show me the signup curve.",
+      intent: "confirmation",
+      items: [
+        make.chart("Signups by hour", [
+          { l: "6a", v: 12 }, { l: "8a", v: 34 }, { l: "10a", v: 68 },
+          { l: "12p", v: 92 }, { l: "2p", v: 78 }, { l: "4p", v: 64 },
+          { l: "6p", v: 88 }, { l: "8p", v: 110 }, { l: "10p", v: 72 },
+        ]),
+      ],
+    },
+    {
+      label: "Team poll",
+      prompt: "What should we tackle first this week?",
+      intent: "confirmation",
+      items: [
+        make.poll("What should we tackle first?", [
+          { l: "Fix onboarding drop-off", v: 64 },
+          { l: "Ship referral program", v: 22 },
+          { l: "Write launch retro", v: 14 },
+        ]),
+      ],
+    },
+    {
+      label: "Follow-up checklist",
+      prompt: "Make a punch list for tomorrow.",
+      intent: "confirmation",
+      items: [
+        make.checklist("Tomorrow's punch list", [
+          { t: "Patch signup form validation bug", d: false },
+          { t: "Send press follow-ups", d: false },
+          { t: "Draft thank-you email to beta users", d: false },
+          { t: "Schedule retro for Friday", d: false },
+        ]),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// Dev review — code, tests, ship
+// ----------------------------------------------------------------
+const devReview: Scenario = {
+  id: "dev-review",
+  name: "Code review",
+  states: [
+    {
+      label: "Three approaches",
+      prompt: "How should I memoize this expensive selector?",
+      intent: "concepts",
+      items: [
+        make.concept("useMemo", "Inline, cheapest. Tied to the component.", "Local"),
+        make.concept("Reselect", "Shared selector cache across components.", "Shared"),
+        make.concept("React Query select", "Already in cache — derive at read time.", "Server"),
+      ],
+    },
+    {
+      label: "Suggested patch",
+      prompt: "Show me the diff.",
+      intent: "confirmation",
+      items: [
+        make.code(
+          "import { createSelector } from 'reselect';\n\nexport const selectActiveItems = createSelector(\n  [(s) => s.items, (s) => s.filter],\n  (items, filter) => items.filter(i => i.tag === filter),\n);",
+          "typescript",
+          "selectors.ts",
+        ),
+      ],
+    },
+    {
+      label: "Test coverage",
+      prompt: "How's coverage trending?",
+      intent: "moodboard",
+      items: [
+        make.metric("87.4%", "Line coverage", "+2.1%", true, "vs. last week"),
+        make.chart("Coverage by package", [
+          { l: "ui", v: 92 }, { l: "core", v: 88 }, { l: "api", v: 81 },
+          { l: "db", v: 76 }, { l: "cli", v: 64 },
+        ]),
+      ],
+    },
+    {
+      label: "Ship checklist",
+      prompt: "What's left before merge?",
+      intent: "confirmation",
+      items: [
+        make.checklist("Pre-merge", [
+          { t: "All tests passing", d: true },
+          { t: "Coverage threshold hit", d: true },
+          { t: "Reviewed by @priya", d: false },
+          { t: "Changelog entry", d: false },
+        ]),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// Shopping concierge — gift hunt
+// ----------------------------------------------------------------
+const shopping: Scenario = {
+  id: "shopping",
+  name: "Gift hunt",
+  states: [
+    {
+      label: "Three gift directions",
+      prompt: "Help me find a birthday gift for my sister. She loves cozy stuff.",
+      intent: "concepts",
+      items: [
+        make.concept("Snug at home", "Throw blanket, candle, slippers — full nesting kit.", "Cozy"),
+        make.concept("Slow weekends", "Cookbook, ceramic mug, loose-leaf tea sampler.", "Quiet"),
+        make.concept("Reading nook", "Hardcover novel, reading light, bookmark set.", "Bookish"),
+      ],
+    },
+    {
+      label: "Picks",
+      prompt: "Show me actual things to buy.",
+      intent: "moodboard",
+      items: [
+        make.product("Linen Throw Blanket", "Hearth & Loom", "$148", 4.7),
+        make.product("Hand-thrown Mug", "Lostine", "$42", 4.9),
+        make.product("Cedar Candle", "P.F. Candle Co.", "$28", 4.8),
+        make.product("Wool Slippers", "Glerups", "$95", 4.6),
+      ],
+    },
+    {
+      label: "Quick poll",
+      prompt: "Ask Mom which one she'd pick.",
+      intent: "confirmation",
+      items: [
+        make.poll("Which would she love most?", [
+          { l: "Throw blanket", v: 52 },
+          { l: "Mug + tea", v: 28 },
+          { l: "Candle", v: 12 },
+          { l: "Slippers", v: 8 },
+        ]),
+      ],
+    },
+    {
+      label: "Order placed",
+      prompt: "Order the blanket, ship to Mom's.",
+      intent: "confirmation",
+      items: [
+        make.email(
+          "you@inbox.com",
+          "Order confirmed — Linen Throw Blanket",
+          "Order #C-9421 confirmed. $148.00 + free shipping. Arriving Tue Jun 18 to Mom's address. Gift-wrapped with the note: 'Happy birthday, Sis. Stay cozy.'",
+        ),
+      ],
+    },
+  ],
+};
+
+export const scenarios: Scenario[] = [
+  catCafe, travel, album, pitch, wedding, support, recipe,
+  briefing, launchDash, devReview, shopping,
+];
