@@ -84,7 +84,10 @@ function Index() {
   };
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-background">
+    <main
+      className="relative h-screen w-screen overflow-hidden bg-background"
+      onClick={() => setPanelOpen(false)}
+    >
       <Canvas
         items={items}
         intent={intent}
@@ -98,7 +101,10 @@ function Index() {
 
       {/* Floating toggle button — always visible */}
       <button
-        onClick={() => setPanelOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setPanelOpen((v) => !v);
+        }}
         className="fixed top-5 right-5 z-50 w-11 h-11 rounded-full bg-card/90 backdrop-blur border border-border shadow-desk flex items-center justify-center text-foreground hover:bg-card transition"
         aria-label={panelOpen ? "Close controls" : "Open controls"}
       >
@@ -119,6 +125,7 @@ function Index() {
             exit={{ x: 360, opacity: 0 }}
             transition={{ type: "spring", stiffness: 220, damping: 28 }}
             className="fixed top-0 right-0 h-full z-40 shadow-desk-hero"
+            onClick={(e) => e.stopPropagation()}
           >
             <ControlsPanel
               onAdd={add}
