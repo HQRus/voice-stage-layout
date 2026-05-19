@@ -26,7 +26,19 @@ export type ItemType =
   | "calendarSlot"
   | "email"
   | "chatMessage"
-  | "section";
+  | "section"
+  // iconic AI widgets
+  | "weather"
+  | "stock"
+  | "map"
+  | "link"
+  | "metric"
+  | "chart"
+  | "code"
+  | "checklist"
+  | "product"
+  | "flight"
+  | "poll";
 
 export type LayoutIntent =
   | "auto"
