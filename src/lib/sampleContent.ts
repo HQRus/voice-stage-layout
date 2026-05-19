@@ -77,6 +77,28 @@ export function makeItem(type: ItemType): MediaItem {
       return { ...base, content: "Help me make a tiny brand for a pop-up cat café.", meta: { speaker: "You", time: "now" } };
     case "section":
       return { ...base, content: "Section", meta: {} };
+    case "weather":
+      return { ...base, content: "72°", meta: { location: "San Francisco", condition: "Partly cloudy", high: 74, low: 58, icon: "cloud-sun" } };
+    case "stock":
+      return { ...base, content: "AAPL", meta: { name: "Apple Inc.", price: "212.48", change: "+2.14", changePct: "+1.02%", up: true, spark: [10,12,11,14,13,16,15,18,17,20,22,21,24] } };
+    case "map":
+      return { ...base, content: "Ferry Building", meta: { location: "San Francisco, CA", subtitle: "1 Ferry Building · Pier 1" } };
+    case "link":
+      return { ...base, content: "How AI is changing design", meta: { domain: "nytimes.com", description: "A long read on the rise of AI tooling in creative work.", url: "https://nytimes.com/…" } };
+    case "metric":
+      return { ...base, content: "$42.8k", meta: { label: "Monthly revenue", delta: "+18.2%", up: true, sub: "vs. last month" } };
+    case "chart":
+      return { ...base, content: "Weekly signups", meta: { bars: [{ l: "M", v: 32 }, { l: "T", v: 48 }, { l: "W", v: 41 }, { l: "T", v: 65 }, { l: "F", v: 72 }, { l: "S", v: 58 }, { l: "S", v: 80 }] } };
+    case "code":
+      return { ...base, content: "function greet(name) {\n  return `Hello, ${name}!`;\n}\n\ngreet('world');", meta: { language: "javascript", filename: "greet.js" } };
+    case "checklist":
+      return { ...base, content: "Launch checklist", meta: { items: [{ t: "Write copy", d: true }, { t: "Ship landing page", d: true }, { t: "Email beta list", d: false }, { t: "Schedule tweet", d: false }] } };
+    case "product":
+      return { ...base, content: "Linen Throw Blanket", meta: { price: "$148", rating: 4.7, image: gradients[1], brand: "Hearth & Loom" } };
+    case "flight":
+      return { ...base, content: "UA 256", meta: { from: "SFO", to: "JFK", fromTime: "8:15 AM", toTime: "4:42 PM", duration: "5h 27m", airline: "United", date: "Fri Jun 14" } };
+    case "poll":
+      return { ...base, content: "Where should we go for dinner?", meta: { options: [{ l: "Italian", v: 48 }, { l: "Sushi", v: 30 }, { l: "Tacos", v: 22 }] } };
   }
 }
 
