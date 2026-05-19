@@ -9,75 +9,96 @@ import {
   type MediaItem,
   type PositionedItem,
 } from "@/lib/layoutEngine";
-import { makeItem, randomMixedSet } from "@/lib/sampleContent";
+import { makeItem } from "@/lib/sampleContent";
+import { scenarios } from "@/lib/scenarios";
 
 export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Composition Lab — Generative Layout Tester" },
+      { title: "Voice StagE — Agent surface preview" },
       {
         name: "description",
         content:
-          "Test generative widescreen layouts: hero, editorial, moodboard, document, logo comparison, and presentation compositions with smooth motion.",
+          "Preview how an AI agent's visual output composes on a generative stage: concepts, brand boards, storyboards, media players, calendars, transcripts.",
       },
     ],
   }),
 });
 
 function Index() {
-  // Start empty to avoid SSR/CSR hydration mismatch from random ids/content.
   const [items, setItems] = useState<MediaItem[]>([]);
   const [intent, setIntent] = useState<LayoutIntent>("auto");
   const [debug, setDebug] = useState(false);
   const [equalSpacing, setEqualSpacing] = useState(false);
   const [overlapAmount, setOverlapAmount] = useState(0);
   const [cornerRadius, setCornerRadius] = useState(16);
-  const [rotationAmount, setRotationAmount] = useState(3.5);
-  const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(
-    null,
-  );
+  const [rotationAmount, setRotationAmount] = useState(2);
+  const [jsonOverride, setJsonOverride] = useState<PositionedItem[] | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
 
-  // Seed an initial composition on the client only.
+  // Scenario playback
+  const [scenarioId, setScenarioId] = useState<string | null>(null);
+  const [scenarioStep, setScenarioStep] = useState(0);
+  const scenario = scenarios.find((s) => s.id === scenarioId) ?? null;
+  const activeState = scenario?.states[scenarioStep] ?? null;
+
+  // Auto-load the cat café scenario on mount (client-only) to showcase
   useEffect(() => {
-    setItems(randomMixedSet(4));
+    loadScenario("cat-cafe");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function loadScenario(id: string) {
+    const s = scenarios.find((x) => x.id === id);
+    if (!s) {
+      setScenarioId(null);
+      return;
+    }
+    setScenarioId(id);
+    setScenarioStep(0);
+    setJsonOverride(null);
+    setIntent(s.states[0].intent);
+    setItems(s.states[0].items);
+  }
+
+  function stepScenario(delta: number) {
+    if (!scenario) return;
+    const next = Math.max(0, Math.min(scenario.states.length - 1, scenarioStep + delta));
+    jumpToStep(next);
+  }
+
+  function jumpToStep(step: number) {
+    if (!scenario) return;
+    const st = scenario.states[step];
+    if (!st) return;
+    setScenarioStep(step);
+    setJsonOverride(null);
+    setIntent(st.intent);
+    setItems(st.items);
+  }
 
   const add = (t: MediaItem["type"]) => {
     setJsonOverride(null);
+    setScenarioId(null);
     setItems((prev) => [...prev, makeItem(t)]);
   };
 
-  const addRandom = () => {
-    setJsonOverride(null);
-    setItems((prev) => [
-      ...prev,
-      ...randomMixedSet(3 + Math.floor(Math.random() * 3)),
-    ]);
-  };
-
   const removeLast = () => setItems((prev) => prev.slice(0, -1));
-  const shuffle = () =>
-    setItems((prev) => [...prev].sort(() => Math.random() - 0.5));
+  const shuffle = () => setItems((prev) => [...prev].sort(() => Math.random() - 0.5));
   const clear = () => {
     setItems([]);
     setJsonOverride(null);
+    setScenarioId(null);
   };
 
   const applyJson = (txt: string) => {
     try {
       const parsed = JSON.parse(txt) as PositionedItem[];
       if (!Array.isArray(parsed)) throw new Error("expected array");
-      setItems(
-        parsed.map((p) => ({
-          id: p.id,
-          type: p.type,
-          content: p.content,
-          meta: p.meta,
-        })),
-      );
+      setItems(parsed.map((p) => ({ id: p.id, type: p.type, content: p.content, meta: p.meta })));
       setJsonOverride(parsed);
+      setScenarioId(null);
     } catch (e) {
       alert("Invalid layout JSON: " + (e as Error).message);
     }
@@ -99,23 +120,14 @@ function Index() {
         overrideFrames={jsonOverride}
       />
 
-      {/* Floating toggle button — always visible */}
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setPanelOpen((v) => !v);
-        }}
+        onClick={(e) => { e.stopPropagation(); setPanelOpen((v) => !v); }}
         className="fixed top-5 right-5 z-50 w-11 h-11 rounded-full bg-card/90 backdrop-blur border border-border shadow-desk flex items-center justify-center text-foreground hover:bg-card transition"
         aria-label={panelOpen ? "Close controls" : "Open controls"}
       >
-        {panelOpen ? (
-          <X className="w-5 h-5" />
-        ) : (
-          <PanelRight className="w-5 h-5" />
-        )}
+        {panelOpen ? <X className="w-5 h-5" /> : <PanelRight className="w-5 h-5" />}
       </button>
 
-      {/* Overlay controls panel */}
       <AnimatePresence>
         {panelOpen && (
           <motion.div
@@ -129,15 +141,19 @@ function Index() {
           >
             <ControlsPanel
               onAdd={add}
-              onAddRandom={addRandom}
               onRemoveLast={removeLast}
               onShuffle={shuffle}
               onClear={clear}
+              scenarioId={scenarioId}
+              scenarioStep={scenarioStep}
+              scenarioStateLabel={activeState?.label ?? null}
+              scenarioStateCount={scenario?.states.length ?? 0}
+              scenarioPrompt={activeState?.prompt ?? null}
+              onLoadScenario={loadScenario}
+              onScenarioStep={stepScenario}
+              onJumpToStep={jumpToStep}
               intent={intent}
-              onIntent={(i) => {
-                setJsonOverride(null);
-                setIntent(i);
-              }}
+              onIntent={(i) => { setJsonOverride(null); setIntent(i); }}
               debug={debug}
               onDebug={setDebug}
               equalSpacing={equalSpacing}
