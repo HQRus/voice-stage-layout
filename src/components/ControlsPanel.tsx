@@ -151,6 +151,8 @@ export function ControlsPanel(p: Props) {
           <Slider label="Overlap" value={p.overlapAmount} min={0} max={200} unit="px" onChange={p.onOverlapAmount} />
           <Slider label="Corner radius" value={p.cornerRadius} min={0} max={120} unit="px" onChange={p.onCornerRadius} />
           <Slider label="Rotation" value={p.rotationAmount} min={0} max={20} unit="°" step={0.5} onChange={p.onRotationAmount} />
+          <Slider label="Shadow" value={p.shadowAmount} min={0} max={100} unit="%" onChange={p.onShadowAmount} />
+
         </Section>
 
         <Section title="Manual test">
