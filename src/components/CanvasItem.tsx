@@ -137,7 +137,7 @@ function ItemContent({ item }: { item: PositionedItem }) {
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               Document
             </div>
-            <h3 className="font-display text-xl text-foreground mt-1">
+            <h3 className="font-serif-display text-xl text-foreground mt-1">
               On the practice of seeing
             </h3>
           </div>
