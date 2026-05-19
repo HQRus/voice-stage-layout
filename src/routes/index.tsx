@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PanelRight, X } from "lucide-react";
 import { Canvas } from "@/components/Canvas";
-import { ControlsPanel } from "@/components/ControlsPanel";
+import { ControlsPanel, type PanelMode } from "@/components/ControlsPanel";
 import {
   type LayoutIntent,
   type MediaItem,
