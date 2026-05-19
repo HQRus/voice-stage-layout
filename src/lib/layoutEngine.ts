@@ -411,36 +411,32 @@ export function generateLayout(
   let intent = options.intent;
   if (intent === "auto") intent = inferIntent(items);
 
-  if (options.equalSpacing) return equalLayout(items, viewport);
+  if (options.equalSpacing) return equalLayout(items, viewport, options);
 
   let frames: PositionedItem[];
   switch (intent) {
     case "hero":
-      frames = heroLayout(items, viewport);
+      frames = heroLayout(items, viewport, options);
       break;
     case "equal":
-      frames = equalLayout(items, viewport);
+      frames = equalLayout(items, viewport, options);
       break;
     case "logos":
-      frames = equalLayout(items, viewport, { square: true });
+      frames = equalLayout(items, viewport, { ...options, square: true });
       break;
     case "editorial":
-      frames = editorialLayout(items, viewport);
+      frames = editorialLayout(items, viewport, options);
       break;
     case "document":
-      frames = documentLayout(items, viewport);
+      frames = documentLayout(items, viewport, options);
       break;
     case "presentation":
-      frames = presentationLayout(items, viewport);
+      frames = presentationLayout(items, viewport, options);
       break;
     case "moodboard":
     default:
-      frames = moodboardLayout(items, viewport);
+      frames = moodboardLayout(items, viewport, options);
   }
 
-  if (!options.allowOverlap) {
-    // Flatten rotations & remove jitter for a clean grid feel
-    frames = frames.map((f) => ({ ...f, rotation: 0 }));
-  }
   return frames;
 }
