@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PanelRight, X } from "lucide-react";
+import { PanelRight, X, Moon, Sun } from "lucide-react";
 import { Canvas } from "@/components/Canvas";
 import { ControlsPanel, type PanelMode } from "@/components/ControlsPanel";
 import {
