@@ -142,10 +142,10 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    background-image:
-      radial-gradient(ellipse 70% 55% at 50% 18%, oklch(0.42 0.06 235 / 0.85), transparent 70%),
-      radial-gradient(ellipse 90% 70% at 78% 88%, oklch(0.16 0.035 250 / 0.9), transparent 65%),
-      radial-gradient(ellipse 60% 50% at 12% 78%, oklch(0.30 0.05 230 / 0.55), transparent 70%);
+    background-image: url("@/assets/background.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
   }
 }
