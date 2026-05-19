@@ -195,13 +195,13 @@ function heroLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): Posit
 function equalLayout(
   items: MediaItem[],
   v: Viewport,
-  opts: { square?: boolean } = {},
+  opts: LayoutOptions & { square?: boolean } = {},
 ): PositionedItem[] {
   const s = stage(v);
   const n = items.length;
   const cols = Math.ceil(Math.sqrt(n * (s.w / s.h)));
   const rows = Math.ceil(n / cols);
-  const gap = 28;
+  const gap = Math.max(0, 28 - (opts.overlapAmount ?? 0));
   const cellW = (s.w - gap * (cols - 1)) / cols;
   const cellH = (s.h - gap * (rows - 1)) / rows;
   const side = opts.square ? Math.min(cellW, cellH) : null;
@@ -224,11 +224,12 @@ function equalLayout(
   });
 }
 
-function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function editorialLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
+  const overlap = opts.overlapAmount ?? 0;
   const visual = items.find((i) => i.type === "image" || i.type === "video");
   const others = items.filter((i) => i !== visual);
-  if (!visual) return moodboardLayout(items, v);
+  if (!visual) return moodboardLayout(items, v, opts);
   const heroW = s.w * 0.58;
   const heroH = s.h * 0.85;
   const frames: PositionedItem[] = [
@@ -240,12 +241,12 @@ function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: s.y + (s.h - heroH) / 2,
       width: heroW,
       height: heroH,
-      rotation: tilt(visual.id, 1.5),
+      rotation: tilt(visual.id, opts.rotationAmount ?? 1.5),
       zIndex: 8,
     },
   ];
-  const colX = s.x + heroW + s.w * 0.05;
-  const colW = s.w - heroW - s.w * 0.05;
+  const colX = s.x + heroW + s.w * 0.05 - overlap;
+  const colW = s.w - heroW - s.w * 0.05 + overlap;
   others.forEach((it, i) => {
     const h = it.type === "document" ? s.h * 0.7 : s.h * 0.35;
     frames.push({
@@ -253,10 +254,10 @@ function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       focusWeight: 0.7,
       layoutRole: "supporting",
       x: colX,
-      y: s.y + i * (h + 24) + 20,
+      y: s.y + i * (h + Math.max(4, 24 - overlap)) + 20,
       width: colW,
       height: h,
-      rotation: tilt(it.id, 2),
+      rotation: tilt(it.id, opts.rotationAmount ?? 2),
       zIndex: 5 - i,
     });
   });
@@ -267,9 +268,10 @@ function editorialLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   );
 }
 
-function moodboardLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
+function moodboardLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
   const n = items.length;
+  const overlap = opts.overlapAmount ?? 0;
   // Pack via weighted "shelves" — feels like a desktop, not a strict grid.
   // Sort by weight to anchor the strongest item, then distribute.
   const ordered = items
@@ -279,7 +281,7 @@ function moodboardLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
   // Grid columns scale gently with item count.
   const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : 4;
   const rows = Math.ceil(n / cols);
-  const gap = 32;
+  const gap = Math.max(0, 32 - overlap);
   const cellW = (s.w - gap * (cols - 1)) / cols;
   const cellH = (s.h - gap * (rows - 1)) / rows;
 
@@ -301,7 +303,7 @@ function moodboardLayout(items: MediaItem[], v: Viewport): PositionedItem[] {
       y: s.y + r * (cellH + gap) + (cellH - h) / 2 + jitterY,
       width: w,
       height: h,
-      rotation: tilt(it.id, 3.5),
+      rotation: tilt(it.id, opts.rotationAmount ?? 3.5),
       zIndex: Math.round(weight * 10),
     });
   });
