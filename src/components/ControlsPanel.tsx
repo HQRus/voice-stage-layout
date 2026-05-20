@@ -15,7 +15,9 @@ interface Props {
     | "concept" | "palette" | "typeSample" | "audio"
     | "storyboardFrame" | "calendarSlot" | "email" | "section"
     | "weather" | "stock" | "map" | "link" | "metric" | "chart"
-    | "code" | "checklist" | "product" | "flight" | "poll") => void;
+    | "code" | "checklist" | "product" | "flight" | "poll"
+    | "script" | "shotList" | "reel" | "adVariant" | "caption"
+    | "thumbnail" | "timeline" | "subtitleStrip" | "gallery" | "transition") => void;
   onRemoveLast: () => void;
   onShuffle: () => void;
   onClear: () => void;
