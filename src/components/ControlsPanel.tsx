@@ -71,6 +71,9 @@ const intents: { value: LayoutIntent; label: string }[] = [
   { value: "logos", label: "Logos" },
   { value: "document", label: "Document" },
   { value: "presentation", label: "Presentation slide" },
+  { value: "reelStack", label: "Reel stack (9:16)" },
+  { value: "adVariants", label: "Ad variants" },
+  { value: "editTimeline", label: "Edit timeline" },
 ];
 
 export function ControlsPanel(p: Props) {
