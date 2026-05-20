@@ -63,7 +63,7 @@ export function Canvas({
       )}
 
       <div className="relative w-full" style={{ height: scrollable ? contentHeight : "100%" }}>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           {frames.map((f) => (
             <CanvasItem key={f.id} item={f} debug={debug} viewport={size} cornerRadius={cornerRadius} shadowAmount={shadowAmount} />
           ))}
