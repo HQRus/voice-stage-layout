@@ -721,7 +721,6 @@ function presentationKitLayout(items: MediaItem[], v: Viewport): { frames: Posit
     // section heights based on type
     let h = 220;
     if (it.type === "section") h = 80;
-    else if (it.type === "brandMark") h = 240;
     else if (it.type === "video") h = Math.min(colW * 9 / 16, 480);
     else if (it.type === "audio") h = 160;
     else if (it.type === "palette") h = 140;
