@@ -115,12 +115,11 @@ export function inferIntent(items: MediaItem[]): LayoutIntent {
 
   if (has("storyboardFrame")) return "storyboard";
   if (has("calendarSlot")) return "calendar";
-  if (has("chatMessage")) return "transcript";
   if (has("email") && items.length === 1) return "confirmation";
   if (has("audio") && items.length === 1) return "mediaPlayer";
   if (has("video") && items.length === 1) return "mediaPlayer";
   if (has("section")) return "presentationKit";
-  if (has("brandMark") || (has("palette") && has("typeSample"))) return "brandBoard";
+  if (has("palette") && has("typeSample")) return "brandBoard";
   if (all("concept") && items.length === 3) return "concepts";
 
   // iconic widgets — single → centered card, multi → moodboard
