@@ -650,6 +650,239 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
         </div>
       );
     }
+
+    // -------- video-creation surfaces --------
+    case "script": {
+      const title = String(meta.title ?? "Script");
+      const duration = String(meta.duration ?? "");
+      const lines = item.content.split("\n");
+      return (
+        <div className={`w-full h-full ${shadow} bg-card flex flex-col overflow-hidden`} style={radiusStyle}>
+          <div className="px-7 pt-6 pb-4 border-b border-border/60 flex items-baseline justify-between">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Script</div>
+              <h3 className="font-display font-bold text-2xl text-foreground mt-1 tracking-tight">{title}</h3>
+            </div>
+            {duration && <div className="text-xs tabular-nums text-muted-foreground">{duration}</div>}
+          </div>
+          <div className="px-7 py-5 overflow-y-auto flex-1 space-y-3">
+            {lines.map((l, i) => {
+              const tc = `00:${String(i * 3).padStart(2, "0")}`;
+              return (
+                <div key={i} className="flex gap-4 text-base leading-relaxed font-display">
+                  <span className="text-xs text-accent tabular-nums font-mono pt-1 shrink-0">{tc}</span>
+                  <span className="text-foreground/85">{l}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    case "shotList": {
+      const shots = (meta.shots as Array<{ n: number; t: string }> | undefined) ?? [];
+      return (
+        <div className={`w-full h-full ${shadow} bg-card p-7 flex flex-col`} style={radiusStyle}>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Shot list</div>
+          <h3 className="text-2xl font-display font-bold text-foreground mt-1 tracking-tight">{item.content}</h3>
+          <div className="mt-5 space-y-3 overflow-y-auto">
+            {shots.map((s, i) => (
+              <div key={i} className="flex items-start gap-4 text-base font-display">
+                <span className="w-8 h-8 rounded-full bg-muted text-foreground/80 flex items-center justify-center tabular-nums font-semibold text-sm shrink-0">{String(s.n).padStart(2,"0")}</span>
+                <span className="text-foreground/90 leading-snug pt-1">{s.t}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "reel": {
+      const caption = String(meta.caption ?? "");
+      const views = String(meta.views ?? "");
+      const duration = String(meta.duration ?? "");
+      return (
+        <div className="w-full h-full overflow-hidden relative" style={{ ...radiusStyle, background: item.content }}>
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.7) 100%)" }} />
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-white/90 text-[11px] font-display font-semibold">
+            <span className="tabular-nums">{duration}</span>
+            <span className="px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-sm">{views} ▶</span>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+              <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+            </div>
+          </div>
+          {caption && (
+            <div className="absolute bottom-3 left-3 right-12 text-white font-display font-semibold text-sm leading-snug drop-shadow-md">
+              {caption}
+            </div>
+          )}
+          <div className="absolute bottom-3 right-3 flex flex-col items-center gap-1.5 text-white/90 text-[10px]">
+            <span className="w-7 h-7 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">♥</span>
+            <span className="w-7 h-7 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">↗</span>
+          </div>
+        </div>
+      );
+    }
+
+    case "adVariant": {
+      const headline = String(meta.headline ?? "");
+      const cta = String(meta.cta ?? "Shop now");
+      const platform = String(meta.platform ?? "");
+      return (
+        <div className="w-full h-full overflow-hidden relative bg-card" style={radiusStyle}>
+          <div className="absolute inset-0" style={{ background: item.content }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 100%)" }} />
+          {platform && (
+            <div className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-white/90 text-[10px] uppercase tracking-[0.16em] font-semibold text-foreground">
+              {platform} ad
+            </div>
+          )}
+          <div className="absolute inset-x-6 bottom-6 flex flex-col gap-3">
+            <h3 className="font-display font-bold text-white leading-[1.05] tracking-tight" style={{ fontSize: Math.min(item.width * 0.09, 44) }}>
+              {headline}
+            </h3>
+            <button className="self-start px-5 py-2.5 rounded-full bg-white text-foreground text-sm font-display font-semibold">
+              {cta} →
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    case "caption": {
+      const hashtags = (meta.hashtags as string[] | undefined) ?? [];
+      return (
+        <div className={`w-full h-full ${shadow} bg-card p-7 flex flex-col`} style={radiusStyle}>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Caption</div>
+          <p className="mt-3 text-xl font-display text-foreground leading-snug">{item.content}</p>
+          {hashtags.length > 0 && (
+            <div className="mt-auto pt-5 flex flex-wrap gap-2">
+              {hashtags.map((h, i) => (
+                <span key={i} className="px-3 py-1 rounded-full bg-accent/15 text-accent text-sm font-display font-semibold">#{h}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    case "thumbnail": {
+      const title = String(meta.title ?? "");
+      const badge = String(meta.badge ?? "");
+      return (
+        <div className="w-full h-full overflow-hidden relative" style={{ ...radiusStyle, background: item.content }}>
+          {badge && (
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-red-600 text-white text-[10px] uppercase tracking-[0.18em] font-bold">
+              {badge}
+            </div>
+          )}
+          <div className="absolute inset-x-0 bottom-0 p-4">
+            <div className="inline-block px-4 py-2 bg-yellow-400 text-black font-display font-black tracking-tight uppercase leading-[1.05]" style={{ fontSize: Math.min(item.width * 0.07, 32) }}>
+              {title}
+            </div>
+          </div>
+          <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-black/80 text-white text-[10px] tabular-nums font-display font-semibold">
+            12:34
+          </div>
+        </div>
+      );
+    }
+
+    case "timeline": {
+      const tracks = (meta.tracks as Array<{ name: string; color: string; clips: Array<{ s: number; e: number }> }> | undefined) ?? [];
+      return (
+        <div className={`w-full h-full ${shadow} bg-card p-5 flex flex-col overflow-hidden`} style={{ ...radiusStyle, background: "#0f1419" }}>
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-white/50 mb-3">
+            <span>Timeline · 00:15</span>
+            <span>30 fps</span>
+          </div>
+          <div className="flex-1 flex flex-col gap-1.5 min-h-0">
+            {tracks.map((t, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-8 text-[10px] font-mono text-white/60 shrink-0">{t.name}</div>
+                <div className="relative flex-1 h-7 rounded-md bg-white/5">
+                  {t.clips.map((c, j) => (
+                    <div key={j} className="absolute top-0.5 bottom-0.5 rounded-sm" style={{
+                      left: `${c.s * 100}%`,
+                      width: `${(c.e - c.s) * 100}%`,
+                      background: t.color,
+                      opacity: 0.9,
+                    }} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 h-0.5 bg-accent w-full relative">
+            <div className="absolute -top-1 left-[34%] w-0.5 h-3 bg-accent" />
+          </div>
+        </div>
+      );
+    }
+
+    case "subtitleStrip": {
+      const speaker = String(meta.speaker ?? "");
+      const time = String(meta.time ?? "");
+      return (
+        <div className="w-full h-full overflow-hidden flex flex-col" style={{ ...radiusStyle, background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)" }}>
+          <div className="flex items-center justify-between px-4 pt-3 text-[10px] uppercase tracking-[0.18em] text-white/60">
+            <span>{speaker}</span>
+            <span className="tabular-nums">{time}</span>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-6">
+            <div
+              className="font-display font-black text-white text-center leading-[1.05] uppercase tracking-tight"
+              style={{
+                fontSize: Math.min(item.width * 0.08, 56),
+                WebkitTextStroke: "2px black",
+              }}
+            >
+              {item.content}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    case "gallery": {
+      const tiles = (meta.tiles as string[] | undefined) ?? [];
+      const cols = tiles.length <= 4 ? 2 : 3;
+      return (
+        <div className={`w-full h-full ${shadow} bg-card p-4 flex flex-col`} style={radiusStyle}>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground px-1 pb-3">{item.content}</div>
+          <div className="flex-1 grid gap-2 min-h-0" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+            {tiles.map((g, i) => (
+              <div key={i} className="rounded-lg overflow-hidden" style={{ background: g }} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "transition": {
+      const from = String(meta.from ?? "");
+      const to = String(meta.to ?? "");
+      const duration = String(meta.duration ?? "");
+      return (
+        <div className={`w-full h-full ${shadow} bg-card p-6 flex flex-col justify-between`} style={radiusStyle}>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Transition</div>
+          <div>
+            <div className="font-display font-bold text-foreground leading-none tracking-tight" style={{ fontSize: Math.min(item.height * 0.22, 44) }}>
+              {item.content}
+            </div>
+            <div className="text-sm text-muted-foreground tabular-nums mt-2">{duration}</div>
+          </div>
+          <div className="flex items-center gap-3 text-sm font-display font-semibold text-foreground/80">
+            <span className="px-3 py-1.5 rounded-md bg-muted">{from}</span>
+            <span className="text-accent">→</span>
+            <span className="px-3 py-1.5 rounded-md bg-muted">{to}</span>
+          </div>
+        </div>
+      );
+    }
   }
 }
 
