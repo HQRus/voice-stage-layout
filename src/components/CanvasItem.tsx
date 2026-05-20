@@ -30,6 +30,10 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
   const centerX = viewport.width / 2 - width / 2;
   const centerY = viewport.height / 2 - height / 2;
 
+  // For visible-overflow types (video, storyboardFrame, section), the inner
+  // child renders the visible rectangle, so the shadow must be applied there.
+  const innerHandlesShadow = item.type === "section" || item.type === "storyboardFrame" || item.type === "video";
+
   return (
     <motion.div
       layout
@@ -43,12 +47,12 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
         top: 0,
         left: 0,
         borderRadius: `${cornerRadius}px`,
-        overflow: (item.type === "section" || item.type === "storyboardFrame" || item.type === "video") ? "visible" : "hidden",
-        boxShadow,
+        overflow: innerHandlesShadow ? "visible" : "hidden",
+        boxShadow: innerHandlesShadow ? "none" : boxShadow,
       }}
       className="will-change-transform"
     >
-      <ItemContent item={item} cornerRadius={cornerRadius} />
+      <ItemContent item={item} cornerRadius={cornerRadius} boxShadow={boxShadow} />
       {debug && (
         <div className="absolute -top-3 -left-1 text-[10px] uppercase tracking-widest bg-foreground text-background px-1.5 py-0.5 rounded-sm">
           {item.type} · {item.layoutRole}
@@ -61,7 +65,7 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
   );
 }
 
-function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadius: number }) {
+function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; cornerRadius: number; boxShadow: string }) {
   const shadow = ""; // box-shadow now applied on the outer motion.div via shadowAmount
   const radiusStyle = { borderRadius: `${cornerRadius}px` };
   const meta = (item.meta ?? {}) as Record<string, unknown>;
@@ -79,15 +83,14 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
       const title = String(meta.title ?? "");
       const duration = String(meta.duration ?? "");
       const hasCaption = Boolean(title || duration);
-      const captionH = hasCaption ? 28 : 0;
       return (
         <div className="w-full h-full flex flex-col">
           <div
-            className="relative w-full flex items-center justify-center overflow-hidden"
+            className="relative flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden"
             style={{
               ...radiusStyle,
-              height: `calc(100% - ${captionH}px)`,
               background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
+              boxShadow,
             }}
           >
             <div className="absolute inset-0 opacity-30" style={{ background: item.content }} />
@@ -96,8 +99,8 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
             </div>
           </div>
           {hasCaption && (
-            <div className="pt-2 px-1 text-[11px] tracking-wider flex items-center justify-between text-foreground/75" style={{ height: captionH }}>
-              <span className="font-medium truncate">{title}</span>
+            <div className="pt-3 px-1 text-sm font-display font-medium flex items-center justify-between text-foreground/80 shrink-0">
+              <span className="truncate">{title}</span>
               <span className="tabular-nums opacity-70 shrink-0 ml-3">{duration}</span>
             </div>
           )}
@@ -120,14 +123,14 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
 
     case "quote": {
       const area = item.width * item.height;
-      const fontSize = Math.max(20, Math.min(60, Math.sqrt(area) / 9));
+      const fontSize = Math.max(28, Math.min(80, Math.sqrt(area) / 7));
       return (
         <div
-          className={`w-full h-full ${shadow} bg-card p-8 flex flex-col justify-center font-serif-display text-foreground`}
+          className={`w-full h-full ${shadow} bg-card p-8 flex flex-col justify-center font-display text-foreground`}
           style={radiusStyle}
         >
-          <div className="text-accent text-4xl leading-none mb-2">"</div>
-          <p className="leading-[1.15] tracking-tight" style={{ fontSize }}>{item.content}</p>
+          <div className="text-accent text-5xl leading-none mb-2 font-display font-bold">"</div>
+          <p className="leading-[1.1] tracking-tight font-semibold" style={{ fontSize }}>{item.content}</p>
         </div>
       );
     }
@@ -135,11 +138,11 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
     case "document":
       return (
         <div className={`w-full h-full ${shadow} bg-card overflow-hidden flex flex-col`} style={radiusStyle}>
-          <div className="px-8 pt-7 pb-3 border-b border-border/60">
+          <div className="px-8 pt-7 pb-4 border-b border-border/60">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Document</div>
-            <h3 className="font-serif-display text-xl text-foreground mt-1">{String(meta.title ?? "Untitled")}</h3>
+            <h3 className="font-display font-bold text-3xl text-foreground mt-1 tracking-tight">{String(meta.title ?? "Untitled")}</h3>
           </div>
-          <div className="px-8 py-6 overflow-y-auto text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+          <div className="px-8 py-6 overflow-y-auto text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap font-display">
             {item.content}
           </div>
         </div>
@@ -149,7 +152,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
       const color = (meta.color as string | undefined) ?? "#111";
       return (
         <div className={`w-full h-full ${shadow} bg-card flex items-center justify-center p-6`} style={radiusStyle}>
-          <div className="font-display tracking-tight" style={{ color, fontSize: Math.max(24, Math.min(item.width, item.height) / 5) }}>
+          <div className="font-display tracking-tight font-bold" style={{ color, fontSize: Math.max(28, Math.min(item.width, item.height) / 4.5) }}>
             {item.content}
           </div>
         </div>
@@ -159,32 +162,13 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
     // -------- agent surfaces --------
     case "concept": {
       const title = String(meta.title ?? "");
-      const tag = String(meta.tag ?? "");
       return (
-        <div className={`w-full h-full ${shadow} bg-card p-7 flex flex-col`} style={radiusStyle}>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-accent">{tag}</div>
-          <h3 className="font-serif-display text-2xl text-foreground mt-3 leading-tight">{title}</h3>
-          <p className="text-sm text-foreground/75 leading-relaxed mt-4">{item.content}</p>
+        <div className={`w-full h-full ${shadow} bg-card p-8 flex flex-col`} style={radiusStyle}>
+          <h3 className="font-display font-bold text-5xl text-foreground leading-[1.05] tracking-tight">{title}</h3>
+          <p className="text-lg text-foreground/75 leading-snug mt-5 font-display">{item.content}</p>
           <div className="mt-auto pt-4 text-[11px] text-muted-foreground tracking-widest uppercase">
             Pick this →
           </div>
-        </div>
-      );
-    }
-
-    case "brandMark": {
-      const tagline = String(meta.tagline ?? "");
-      const accent = String(meta.accent ?? "#c98664");
-      return (
-        <div
-          className={`w-full h-full ${shadow} flex flex-col justify-center items-start px-10`}
-          style={{ ...radiusStyle, background: `linear-gradient(135deg, ${accent}22 0%, transparent 70%)`, backgroundColor: "hsl(var(--card))" }}
-        >
-          <div className="text-[10px] uppercase tracking-[0.25em]" style={{ color: accent }}>Brand</div>
-          <h2 className="font-serif-display text-foreground mt-3 leading-[0.95]" style={{ fontSize: Math.min(item.height * 0.32, 76) }}>
-            {item.content}
-          </h2>
-          {tagline && <p className="mt-4 text-foreground/70 text-base italic">{tagline}</p>}
         </div>
       );
     }
@@ -195,7 +179,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
         <div className={`w-full h-full ${shadow} bg-card flex flex-col`} style={radiusStyle}>
           <div className="px-5 pt-4 pb-3 flex items-baseline justify-between">
             <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Palette</div>
-            <div className="text-sm text-foreground/80">{item.content}</div>
+            <div className="text-base font-display font-semibold text-foreground/80">{item.content}</div>
           </div>
           <div className="flex-1 flex">
             {swatches.map((c, i) => (
@@ -210,18 +194,23 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
 
     case "typeSample": {
       const display = String(meta.display ?? "Display");
-      const body = String(meta.body ?? "Body");
-      const sample = String(meta.sample ?? "");
+      const alphabetSize = Math.max(22, Math.min(item.width / 14, item.height * 0.18));
       return (
-        <div className={`w-full h-full ${shadow} bg-card p-7 flex flex-col`} style={radiusStyle}>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Typography</div>
-          <div className="font-serif-display text-foreground mt-2 leading-none" style={{ fontSize: Math.min(item.height * 0.38, 110) }}>
-            {item.content}
+        <div className={`w-full h-full ${shadow} bg-card p-8 flex flex-col justify-between`} style={radiusStyle}>
+          <div
+            className="font-display font-bold text-foreground leading-[1.05] tracking-tight break-words"
+            style={{ fontSize: alphabetSize }}
+          >
+            ABCDEFGHIJKLM
+            <br />
+            NOPQRSTUVWXYZ
+            <br />
+            abcdefghijklm
+            <br />
+            nopqrstuvwxyz
           </div>
-          <div className="mt-auto space-y-2">
-            <div className="text-sm text-foreground">{display} <span className="text-muted-foreground">/ Display</span></div>
-            <div className="text-sm text-foreground">{body} <span className="text-muted-foreground">/ Body</span></div>
-            {sample && <p className="text-foreground/70 text-sm italic mt-3">{sample}</p>}
+          <div className="mt-6 pt-4 border-t border-border/60 text-base font-display font-semibold text-foreground tracking-tight">
+            {display}
           </div>
         </div>
       );
@@ -284,19 +273,18 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
     case "storyboardFrame": {
       const frame = Number(meta.frame ?? 0);
       const caption = String(meta.caption ?? "");
-      const captionH = caption ? 44 : 0;
       return (
         <div className="w-full h-full flex flex-col">
           <div
-            className="relative w-full overflow-hidden bg-card"
-            style={{ ...radiusStyle, height: `calc(100% - ${captionH}px)`, background: item.content }}
+            className="relative flex-1 min-h-0 w-full overflow-hidden bg-card"
+            style={{ ...radiusStyle, background: item.content, boxShadow }}
           >
-            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-background/85 text-[11px] tabular-nums font-medium text-foreground">
+            <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 text-xs tabular-nums font-display font-semibold text-foreground">
               {String(frame).padStart(2, "0")}
             </div>
           </div>
           {caption && (
-            <div className="pt-2 px-1 text-xs text-foreground/75 leading-snug" style={{ height: captionH }}>
+            <div className="pt-3 px-1 text-sm text-foreground/75 leading-snug font-display shrink-0">
               {caption}
             </div>
           )}
@@ -321,7 +309,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{day}</div>
-            <div className="text-base text-foreground font-medium">{item.content} <span className="text-muted-foreground text-sm font-normal">· {duration}</span></div>
+            <div className="text-base text-foreground font-display font-semibold">{item.content} <span className="text-muted-foreground text-sm font-normal">· {duration}</span></div>
             {(title || withWho) && (
               <div className="text-xs text-foreground/70 mt-0.5">{title}{withWho ? ` · with ${withWho}` : ""}</div>
             )}
@@ -338,36 +326,24 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
       return (
         <div className={`w-full h-full ${shadow} bg-card flex flex-col`} style={radiusStyle}>
           <div className="px-7 pt-6 pb-4 border-b border-border/60 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-accent/15 text-accent flex items-center justify-center"><Mail className="w-4 h-4" /></div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Email · sent</div>
-              <div className="text-xs text-foreground/70">to {to}</div>
+            <div className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center"><Mail className="w-5 h-5" /></div>
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Email · sent</div>
+              <div className="text-sm text-foreground/70 truncate font-display">to {to}</div>
             </div>
           </div>
-          <div className="px-7 py-5 flex-1">
-            <h3 className="font-serif-display text-xl text-foreground leading-tight">{subject}</h3>
-            <p className="text-sm text-foreground/80 leading-relaxed mt-4 whitespace-pre-wrap">{item.content}</p>
+          <div className="px-7 py-6 flex-1">
+            <h3 className="font-display font-bold text-2xl text-foreground leading-tight tracking-tight">{subject}</h3>
+            <p className="text-lg text-foreground/80 leading-relaxed mt-4 whitespace-pre-wrap font-display">{item.content}</p>
           </div>
-          <div className="px-7 py-3 border-t border-border/60 text-[11px] text-muted-foreground tracking-wider uppercase flex items-center gap-2">
-            <Check className="w-3.5 h-3.5 text-accent" /> Delivered
+          <div className="px-7 py-3 border-t border-border/60 text-[10px] text-muted-foreground tracking-[0.14em] uppercase flex items-center gap-1.5">
+            <Check className="w-3 h-3 text-accent" /> Delivered
           </div>
         </div>
       );
     }
 
-    case "chatMessage": {
-      const speaker = String(meta.speaker ?? "");
-      const time = String(meta.time ?? "");
-      const isYou = speaker.toLowerCase() === "you";
-      return (
-        <div className="w-full h-full flex" style={{ justifyContent: isYou ? "flex-end" : "flex-start" }}>
-          <div className={`max-w-[78%] px-4 py-3 rounded-2xl ${isYou ? "bg-accent text-accent-foreground" : "bg-muted text-foreground"}`}>
-            <div className="text-[10px] uppercase tracking-[0.18em] opacity-60 mb-1">{speaker} · {time}</div>
-            <div className="text-sm leading-snug">{item.content}</div>
-          </div>
-        </div>
-      );
-    }
+
 
     case "section":
       return (
@@ -392,7 +368,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
             <CloudSun className="w-10 h-10 text-accent" strokeWidth={1.4} />
           </div>
           <div className="flex items-end justify-between">
-            <div className="font-serif-display text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.45, 96) }}>
+            <div className="font-display font-bold text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.45, 96) }}>
               {item.content}
             </div>
             {(high !== undefined || low !== undefined) && (
@@ -425,7 +401,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
               <div className="text-xs text-muted-foreground truncate">{name}</div>
             </div>
             <div className="text-right">
-              <div className="font-serif-display text-foreground tabular-nums" style={{ fontSize: Math.min(item.height * 0.22, 32) }}>${price}</div>
+              <div className="font-display font-bold text-foreground tabular-nums" style={{ fontSize: Math.min(item.height * 0.22, 32) }}>${price}</div>
               <div className="text-xs flex items-center justify-end gap-1 tabular-nums" style={{ color: accentColor }}>
                 {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {change} ({changePct})
@@ -502,7 +478,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
       return (
         <div className={`w-full h-full ${shadow} bg-card p-6 flex flex-col justify-center`} style={radiusStyle}>
           <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
-          <div className="font-serif-display text-foreground mt-2 leading-none tabular-nums" style={{ fontSize: Math.min(item.height * 0.42, 80) }}>
+          <div className="font-display font-bold text-foreground mt-2 leading-none tabular-nums" style={{ fontSize: Math.min(item.height * 0.42, 80) }}>
             {item.content}
           </div>
           {delta && (
@@ -620,7 +596,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
           </div>
           <div className="flex items-center justify-between gap-4 my-3">
             <div className="text-center">
-              <div className="font-serif-display text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{from}</div>
+              <div className="font-display font-bold text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{from}</div>
               <div className="text-xs text-muted-foreground tabular-nums mt-1">{fromTime}</div>
             </div>
             <div className="flex-1 flex items-center gap-2 min-w-0">
@@ -629,7 +605,7 @@ function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadiu
               <div className="flex-1 border-t border-dashed border-border" />
             </div>
             <div className="text-center">
-              <div className="font-serif-display text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{to}</div>
+              <div className="font-display font-bold text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{to}</div>
               <div className="text-xs text-muted-foreground tabular-nums mt-1">{toTime}</div>
             </div>
           </div>

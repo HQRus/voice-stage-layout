@@ -59,8 +59,6 @@ export function makeItem(type: ItemType): MediaItem {
     }
     case "concept":
       return { ...base, content: "A calm, designy café where adoptable cats lounge like little art critics.", meta: { title: "Concept", tag: "Idea" } };
-    case "brandMark":
-      return { ...base, content: "Studio Whiskers", meta: { tagline: "Slow mornings, soft purrs.", accent: "#c98664" } };
     case "palette":
       return { ...base, content: "Calm warmth", meta: { swatches: ["#f7f1ea", "#e6d5c1", "#c98664", "#3a2e26", "#1a1614"] } };
     case "typeSample":
@@ -73,8 +71,6 @@ export function makeItem(type: ItemType): MediaItem {
       return { ...base, content: "3:00 PM", meta: { day: "Tomorrow", duration: "30 min", status: "open" } };
     case "email":
       return { ...base, content: "Sharing the cat café launch concept and a quick meeting note. Let me know what you think.", meta: { to: "boss@studio.com", subject: "Cat café concept + Wed 3pm" } };
-    case "chatMessage":
-      return { ...base, content: "Help me make a tiny brand for a pop-up cat café.", meta: { speaker: "You", time: "now" } };
     case "section":
       return { ...base, content: "Section", meta: {} };
     case "weather":
@@ -111,9 +107,6 @@ export function randomMixedSet(count = 5): MediaItem[] {
 export const make = {
   concept: (title: string, body: string, tag: string) => ({
     id: id(), type: "concept" as const, content: body, meta: { title, tag },
-  }),
-  brand: (name: string, tagline: string, accent = "#c98664") => ({
-    id: id(), type: "brandMark" as const, content: name, meta: { tagline, accent },
   }),
   palette: (name: string, swatches: string[]) => ({
     id: id(), type: "palette" as const, content: name, meta: { swatches },

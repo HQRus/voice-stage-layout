@@ -1,81 +1,70 @@
 ## Goal
 
-Re-tune the layout testing utility so it reflects how a real AI agent (Russ) would present output during a multi-step creative session, not a random pile of media. The stage should fluidly move between recognisable "agent surfaces" — concept comparisons, brand boards, hero reveals, mascot sets, storyboards, media players, presentation kits, calendar pickers, action confirmations — all driven by the same layout engine and JSON contract.
+Make all items chunky, simple, larger, fully sans-serif. Fix layout bugs on video/frame/concept/email. Remove brand and chat items. Simplify type sample.
 
-## Mapping the demo flow to layouts
+## Global typography
 
-| Demo step | Stage state | New layout intent |
-| --- | --- | --- |
-| 3 brainstorm concepts | 3 equal cards w/ title + blurb | `concepts` (3-up compare) |
-| Brand board | Name, tagline, palette, type, tone block | `brandBoard` |
-| 3 visual directions | Overlapping floating images | `directions` (existing moodboard, tuned) |
-| Pick one / premium hero | Big hero + small caption | `hero` (already exists, refined) |
-| Mascot variations (sticker, poster, avatar) | Playful tiles of different aspect ratios | `mascotSet` |
-| Storyboard | Horizontal numbered frames + captions | `storyboard` |
-| Video ad | Centered video player w/ controls + title | `mediaPlayer` (video) |
-| Music bed | Audio player card, waveform, transport | `mediaPlayer` (audio) |
-| Launch kit presentation | Stacked sections, scrollable | `presentationKit` |
-| Calendar slots | Day column with selectable time chips | `calendar` |
-| Booked invite | Single confirmation card | `confirmation` |
-| Sent email | Email preview card | `confirmation` (email variant) |
-| Transcript | Chat bubble timeline | `transcript` |
+- Strip every `font-serif-display` usage in `CanvasItem.tsx` (quote, document title, concept title, brandMark, palette, typeSample, email subject, weather temp, metric value, etc.) and replace with `font-display` (sans, tight tracking).
+- Bump base sizes across items roughly +30–100% — chunkier headers, larger body. Tighten leading. Use `font-semibold`/`font-bold` for titles instead of relying on serif weight.
+- Eyebrow uppercase labels: reduce visual noise — slightly larger but less tracking; some removed (see per-item).
 
-## What I'll build
+## Per-item changes (CanvasItem.tsx)
 
-### 1. Coherent scenario presets (replaces "random mixed set")
-Add a `scenarios` module with curated, related item sets that mirror the demo (cat-café flow + a couple more: product launch, travel itinerary). Each scenario is an ordered list of `{ intent, items }` states the user can step through with Prev/Next, so the stage always shows things that belong together.
+**video**
+- Bug: inner dark video div has `borderRadius` + a `captionH` reservation, but the outer motion wrapper also has `borderRadius` and `overflow: visible`, so the rounded video sits above a transparent caption strip that still casts the parent shadow → looks like a gap.
+- Fix: when there is no caption, render a single full-bleed video div (no flex column, no inner radius reservation). When there IS a caption: make the caption float *outside* the rounded video (same pattern as new storyboardFrame fix), and set the outer wrapper `overflow: visible` only there. Ensure the shadow source is the video rectangle itself, not the wrapper — apply `boxShadow` to the inner video div and set wrapper `boxShadow: none` for video type (handled by passing a flag, or by moving shadow application into ItemContent for video/frame/section).
 
-Keep the "Add image / video / text / …" buttons for raw testing, but demote the random button — replace with a "Load scenario" picker.
+**quote**
+- Remove `font-serif-display`, use `font-display font-semibold`. Drop the giant `"` ornament or keep small. Increase body font min/max (e.g. 28–80).
 
-### 2. New content item types
-Extend `MediaItem` types with:
-- `palette` — color swatches (array of hex)
-- `audio` — title + duration + fake waveform
-- `storyboardFrame` — frame number + still + caption
-- `calendarSlot` — day + time + status
-- `email` — to / subject / body preview
-- `chatMessage` — speaker + text + timestamp
+**document**
+- Double body text size (`text-sm` → `text-lg`, leading relaxed).
+- Title: switch to `font-display font-bold`, bump to `text-3xl`.
+- Eyebrow stays small.
 
-Each gets a dedicated renderer in `CanvasItem` so the same engine can compose them.
+**concept**
+- Remove the `tag` eyebrow ("IDEA") entirely.
+- Title `text-2xl` → `text-5xl font-display font-bold`.
+- Body `text-sm` → `text-lg`.
+- Keep "PICK THIS →" footer at current small size.
 
-### 3. New layout intents in the engine
-Add to `LayoutIntent` and implement in `layoutEngine.ts`:
-- `concepts` — 3 equal cards, generous gutters, light tilt
-- `brandBoard` — anchor name/tagline block, palette strip, type sample, tone notes laid out as a poster
-- `mascotSet` — mixed-aspect tiles (square sticker, vertical poster, circular avatar) packed playfully
-- `storyboard` — horizontal strip with numbered frames + captions under each
-- `mediaPlayer` — single centered player (video or audio), optional caption beneath
-- `presentationKit` — vertical scroll of grouped sections (brand → mascot → posters → video → links)
-- `calendar` — left day header, vertical stack of time-slot pills
-- `confirmation` — single centered card (calendar invite, sent email, etc.)
-- `transcript` — left-aligned vertical chat-bubble column
+**brandMark**
+- Remove case entirely from `ItemContent` switch.
+- Remove from `ItemType` union in `layoutEngine.ts`.
+- Remove `make.brand` from `sampleContent.ts` and any `makeItem("brandMark")` branch.
+- Remove from `ControlsPanel` add-item list.
+- Update `scenarios.ts` to drop any `make.brand(...)` calls (replace with another existing item or omit).
 
-Engine still infers intent when set to `auto`, now using item-type signals (e.g. any `storyboardFrame` → storyboard, any `calendarSlot` → calendar, all `concept` cards of count 3 → concepts).
+**typeSample** — redesign
+- Drop the giant "Aa" hero. Instead, render the full alphabet `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz` (or two lines) at a large size, then the font name beneath in small caps.
+- Show 1 sample per item (display font). Drop the body/sample second block — simpler.
 
-### 4. Controls panel updates
-- Replace "Mixed random set" with **Scenarios** dropdown (Cat Café Launch, Product Launch, Travel Plan) + **Prev / Next state** buttons.
-- Keep Geometry sliders (overlap, radius, rotation) but cap rotation lower for "agent-output" mode since most agent surfaces should feel composed, not collaged.
-- Add a small **State label** at the top of the panel showing which step of the scenario is active ("3 / 12 — Brand board").
-- Keep raw "Add media" buttons under a collapsed **Manual test** section.
+**storyboardFrame**
+- Same shadow/overflow issue as video: outer wrapper has shadow + visible overflow, inner image is shorter → shadow appears below image. Fix by moving the box-shadow to the inner image div and clearing wrapper shadow for this type.
+- Frame number badge: increase padding (`px-3 py-1`), slightly larger text (`text-xs`), to balance the larger corner radius of the parent.
+- Caption: render *outside/below* the image with margin-top (it already is below — confirm it sits clearly outside, not touching the rounded corner). Use `text-sm` and `text-foreground/70`.
 
-### 5. Stage polish to support real output
-- `presentationKit` is the only intent that allows vertical scrolling — canvas gets an `overflow-y-auto` branch.
-- Storyboard frames are numbered and connected by a hairline guide line so order reads instantly.
-- Confirmation/email/calendar surfaces use the centered "single card" treatment with a soft backdrop dim of other potential items.
+**email**
+- Bump body text (`text-sm` → `text-base`/`text-lg`, leading-relaxed).
+- Subject: `font-serif-display text-xl` → `font-display font-bold text-2xl`.
+- "Email · sent" / "to …" / "Delivered" footer: shrink tracking & size — "DELIVERED" currently looks oversized due to uppercase + wide tracking. Reduce to `text-[10px] tracking-[0.14em]` and lowercase the label or drop the uppercase.
 
-### 6. JSON contract still drives everything
-The "AI layout JSON" panel keeps working — every new intent and item type is part of the same `PositionedItem` schema. Documented example JSONs for each new intent are added to the placeholder text and a tiny `examples` folder so the agent (or a real Russ backend) can target the same surface.
+**chatMessage**
+- Remove case from switch.
+- Remove from `ItemType` union, `makeItem`, `make.chat`, ControlsPanel list, and any scenario references.
 
-## Out of scope (for this pass)
-- Real audio/video playback, real Google Calendar / Gmail calls — all surfaces use mocked content tuned to the demo.
-- Drag-to-reorder items on the canvas.
-- Saving scenarios to a database.
+## Shadow handling note
 
-## Files I'll touch
-- `src/lib/layoutEngine.ts` — new intents, inference rules, item types.
-- `src/lib/sampleContent.ts` — new makers per type.
-- `src/lib/scenarios.ts` *(new)* — Cat Café + 1–2 other ordered scenarios.
-- `src/components/CanvasItem.tsx` — renderers for palette, audio, storyboard frame, calendar slot, email, chat message.
-- `src/components/Canvas.tsx` — scroll branch for `presentationKit`, optional dim overlay for confirmation states.
-- `src/components/ControlsPanel.tsx` — Scenarios picker, Prev/Next, state label, collapse Manual test.
-- `src/routes/index.tsx` — wire scenario state machine.
+For `video` and `storyboardFrame`, the outer wrapper currently sets `overflow: visible` + `boxShadow`. After the fix the shadow should follow the visible rectangle (the image/video), so:
+- In `CanvasItem` outer wrapper, set `boxShadow: none` when `item.type` ∈ {video, storyboardFrame, section}.
+- Apply the computed `boxShadow` inside `ItemContent` on the actual image/video div for those two types (pass `boxShadow` as a prop to `ItemContent`).
+
+## Files touched
+
+- `src/components/CanvasItem.tsx` — all type/render changes, shadow refactor for video/frame.
+- `src/lib/layoutEngine.ts` — drop `brandMark` and `chatMessage` from `ItemType`.
+- `src/lib/sampleContent.ts` — remove brand/chat from `makeItem`, `make`, default sets.
+- `src/lib/scenarios.ts` — replace any brand/chat usages.
+- `src/components/ControlsPanel.tsx` — remove brand/chat from "add item" buttons.
+
+No styles.css changes needed (font-display already defined as sans).

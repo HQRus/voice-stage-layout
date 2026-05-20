@@ -18,14 +18,12 @@ export type ItemType =
   | "quote"
   // agent surfaces
   | "concept"
-  | "brandMark"
   | "palette"
   | "typeSample"
   | "audio"
   | "storyboardFrame"
   | "calendarSlot"
   | "email"
-  | "chatMessage"
   | "section"
   // iconic AI widgets
   | "weather"
@@ -117,12 +115,11 @@ export function inferIntent(items: MediaItem[]): LayoutIntent {
 
   if (has("storyboardFrame")) return "storyboard";
   if (has("calendarSlot")) return "calendar";
-  if (has("chatMessage")) return "transcript";
   if (has("email") && items.length === 1) return "confirmation";
   if (has("audio") && items.length === 1) return "mediaPlayer";
   if (has("video") && items.length === 1) return "mediaPlayer";
   if (has("section")) return "presentationKit";
-  if (has("brandMark") || (has("palette") && has("typeSample"))) return "brandBoard";
+  if (has("palette") && has("typeSample")) return "brandBoard";
   if (all("concept") && items.length === 3) return "concepts";
 
   // iconic widgets — single → centered card, multi → moodboard
@@ -478,7 +475,6 @@ function conceptsLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): P
 function brandBoardLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
   const find = (t: ItemType) => items.find((i) => i.type === t);
-  const brand = find("brandMark");
   const palette = find("palette");
   const type = find("typeSample");
   const tone = items.find((i) => i.type === "text" || i.type === "quote");
@@ -488,19 +484,6 @@ function brandBoardLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions):
   const leftW = s.w * 0.58;
   const rightW = s.w - leftW - colGap;
 
-  if (brand) {
-    frames.push({
-      ...brand,
-      focusWeight: 1,
-      layoutRole: "hero",
-      x: s.x,
-      y: s.y,
-      width: leftW,
-      height: s.h * 0.55,
-      rotation: 0,
-      zIndex: 10,
-    });
-  }
   if (palette) {
     frames.push({
       ...palette,
@@ -738,7 +721,6 @@ function presentationKitLayout(items: MediaItem[], v: Viewport): { frames: Posit
     // section heights based on type
     let h = 220;
     if (it.type === "section") h = 80;
-    else if (it.type === "brandMark") h = 240;
     else if (it.type === "video") h = Math.min(colW * 9 / 16, 480);
     else if (it.type === "audio") h = 160;
     else if (it.type === "palette") h = 140;

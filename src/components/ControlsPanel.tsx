@@ -12,8 +12,8 @@ interface Props {
   // Manual add controls
   onAdd: (type:
     | "image" | "video" | "text" | "document" | "logo" | "quote"
-    | "concept" | "brandMark" | "palette" | "typeSample" | "audio"
-    | "storyboardFrame" | "calendarSlot" | "email" | "chatMessage" | "section"
+    | "concept" | "palette" | "typeSample" | "audio"
+    | "storyboardFrame" | "calendarSlot" | "email" | "section"
     | "weather" | "stock" | "map" | "link" | "metric" | "chart"
     | "code" | "checklist" | "product" | "flight" | "poll") => void;
   onRemoveLast: () => void;
@@ -210,14 +210,12 @@ export function ControlsPanel(p: Props) {
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground pt-3">Agent surfaces</div>
               <Grid>
                 <Btn onClick={() => p.onAdd("concept")}>Concept</Btn>
-                <Btn onClick={() => p.onAdd("brandMark")}>Brand</Btn>
                 <Btn onClick={() => p.onAdd("palette")}>Palette</Btn>
                 <Btn onClick={() => p.onAdd("typeSample")}>Type</Btn>
                 <Btn onClick={() => p.onAdd("audio")}>Audio</Btn>
                 <Btn onClick={() => p.onAdd("storyboardFrame")}>Frame</Btn>
                 <Btn onClick={() => p.onAdd("calendarSlot")}>Slot</Btn>
                 <Btn onClick={() => p.onAdd("email")}>Email</Btn>
-                <Btn onClick={() => p.onAdd("chatMessage")}>Chat</Btn>
                 <Btn onClick={() => p.onAdd("section")}>Section</Btn>
               </Grid>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground pt-3">AI widgets</div>
