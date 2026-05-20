@@ -475,7 +475,6 @@ function conceptsLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): P
 function brandBoardLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
   const s = stage(v);
   const find = (t: ItemType) => items.find((i) => i.type === t);
-  const brand = find("brandMark");
   const palette = find("palette");
   const type = find("typeSample");
   const tone = items.find((i) => i.type === "text" || i.type === "quote");
@@ -485,19 +484,6 @@ function brandBoardLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions):
   const leftW = s.w * 0.58;
   const rightW = s.w - leftW - colGap;
 
-  if (brand) {
-    frames.push({
-      ...brand,
-      focusWeight: 1,
-      layoutRole: "hero",
-      x: s.x,
-      y: s.y,
-      width: leftW,
-      height: s.h * 0.55,
-      rotation: 0,
-      zIndex: 10,
-    });
-  }
   if (palette) {
     frames.push({
       ...palette,
