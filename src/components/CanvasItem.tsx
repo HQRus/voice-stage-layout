@@ -30,6 +30,10 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
   const centerX = viewport.width / 2 - width / 2;
   const centerY = viewport.height / 2 - height / 2;
 
+  // For visible-overflow types (video, storyboardFrame, section), the inner
+  // child renders the visible rectangle, so the shadow must be applied there.
+  const innerHandlesShadow = item.type === "section" || item.type === "storyboardFrame" || item.type === "video";
+
   return (
     <motion.div
       layout
@@ -43,12 +47,12 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
         top: 0,
         left: 0,
         borderRadius: `${cornerRadius}px`,
-        overflow: (item.type === "section" || item.type === "storyboardFrame" || item.type === "video") ? "visible" : "hidden",
-        boxShadow,
+        overflow: innerHandlesShadow ? "visible" : "hidden",
+        boxShadow: innerHandlesShadow ? "none" : boxShadow,
       }}
       className="will-change-transform"
     >
-      <ItemContent item={item} cornerRadius={cornerRadius} />
+      <ItemContent item={item} cornerRadius={cornerRadius} boxShadow={boxShadow} />
       {debug && (
         <div className="absolute -top-3 -left-1 text-[10px] uppercase tracking-widest bg-foreground text-background px-1.5 py-0.5 rounded-sm">
           {item.type} · {item.layoutRole}
@@ -61,7 +65,7 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
   );
 }
 
-function ItemContent({ item, cornerRadius }: { item: PositionedItem; cornerRadius: number }) {
+function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; cornerRadius: number; boxShadow: string }) {
   const shadow = ""; // box-shadow now applied on the outer motion.div via shadowAmount
   const radiusStyle = { borderRadius: `${cornerRadius}px` };
   const meta = (item.meta ?? {}) as Record<string, unknown>;
