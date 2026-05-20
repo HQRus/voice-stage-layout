@@ -137,6 +137,14 @@ export function inferIntent(items: MediaItem[]): LayoutIntent {
   if (has("palette") && has("typeSample")) return "brandBoard";
   if (all("concept") && items.length === 3) return "concepts";
 
+  // video-creation surfaces
+  if (has("timeline")) return "editTimeline";
+  if (all("reel")) return "reelStack";
+  if (all("adVariant")) return "adVariants";
+  if (has("thumbnail") && items.length <= 3) return "directions";
+  if (all("script")) return "document";
+  if (has("shotList") && items.length === 1) return "confirmation";
+
   // iconic widgets — single → centered card, multi → moodboard
   const widgetTypes: ItemType[] = ["weather","stock","map","link","metric","chart","code","checklist","product","flight","poll"];
   const isWidget = (t: ItemType) => widgetTypes.includes(t);
