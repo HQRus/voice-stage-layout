@@ -18,14 +18,12 @@ export type ItemType =
   | "quote"
   // agent surfaces
   | "concept"
-  | "brandMark"
   | "palette"
   | "typeSample"
   | "audio"
   | "storyboardFrame"
   | "calendarSlot"
   | "email"
-  | "chatMessage"
   | "section"
   // iconic AI widgets
   | "weather"
