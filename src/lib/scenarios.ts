@@ -36,7 +36,6 @@ const catCafe: Scenario = {
       prompt: "Use Studio Whiskers. Show me the vibe.",
       intent: "brandBoard",
       items: [
-        make.brand("Studio Whiskers", "Slow mornings, soft purrs.", "#c98664"),
         make.palette("Calm warmth", ["#f7f1ea", "#e6d5c1", "#c98664", "#3a2e26", "#1a1614"]),
         make.typeSample("Söhne Breit", "Inter", "Soft mornings begin with a quiet purr."),
         make.quote("Friendly, unhurried, just a little literary."),
@@ -107,7 +106,6 @@ const catCafe: Scenario = {
       intent: "presentationKit",
       items: [
         make.section("Brand"),
-        make.brand("Studio Whiskers", "Slow mornings, soft purrs.", "#c98664"),
         make.palette("Calm warmth", ["#f7f1ea", "#e6d5c1", "#c98664", "#3a2e26", "#1a1614"]),
         make.section("Mascot"),
         make.image("linear-gradient(135deg, #c98664 0%, #3a2e26 100%)"),
@@ -302,7 +300,6 @@ const pitch: Scenario = {
       prompt: "Make a brand board for Loop.",
       intent: "brandBoard",
       items: [
-        make.brand("Loop", "Quiet software for noisy teams.", "#5b6cff"),
         make.palette("Cool focus", ["#f4f6fb", "#dde3f0", "#5b6cff", "#1a1f3a", "#0a0d1f"]),
         make.typeSample("GT Walsheim", "Inter", "Ship the work, skip the meeting."),
         make.quote("Calm, opinionated, fast."),
@@ -390,7 +387,6 @@ const wedding: Scenario = {
       prompt: "Lock the garden look.",
       intent: "brandBoard",
       items: [
-        make.brand("Sam & Theo", "Saturday, June 14.", "#7a8c5c"),
         make.palette("Olive grove", ["#f5f1e8", "#e0d9c4", "#a8a47a", "#7a8c5c", "#2e3a25"]),
         make.typeSample("Canela Deck", "Söhne", "We'd love to have you there."),
         make.quote("Warm, slow, full of friends."),
@@ -446,9 +442,7 @@ const support: Scenario = {
       intent: "transcript",
       items: [
         make.chat("Maya (customer)", "Hi — my order #4821 arrived broken. Can I get a refund?", "9:02"),
-        make.chat("Russ", "So sorry about that. I can see the order. Pulling up options now.", "9:02"),
         make.chat("Maya (customer)", "Thanks. I'd prefer a refund over a replacement.", "9:03"),
-        make.chat("Russ", "Got it. Full refund of $84.00 to your original card. Want me to send it?", "9:03"),
         make.chat("Maya (customer)", "Yes please.", "9:04"),
       ],
     },
