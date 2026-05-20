@@ -83,15 +83,14 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
       const title = String(meta.title ?? "");
       const duration = String(meta.duration ?? "");
       const hasCaption = Boolean(title || duration);
-      const captionH = hasCaption ? 28 : 0;
       return (
         <div className="w-full h-full flex flex-col">
           <div
-            className="relative w-full flex items-center justify-center overflow-hidden"
+            className="relative flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden"
             style={{
               ...radiusStyle,
-              height: `calc(100% - ${captionH}px)`,
               background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
+              boxShadow,
             }}
           >
             <div className="absolute inset-0 opacity-30" style={{ background: item.content }} />
@@ -100,8 +99,8 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
             </div>
           </div>
           {hasCaption && (
-            <div className="pt-2 px-1 text-[11px] tracking-wider flex items-center justify-between text-foreground/75" style={{ height: captionH }}>
-              <span className="font-medium truncate">{title}</span>
+            <div className="pt-3 px-1 text-sm font-display font-medium flex items-center justify-between text-foreground/80 shrink-0">
+              <span className="truncate">{title}</span>
               <span className="tabular-nums opacity-70 shrink-0 ml-3">{duration}</span>
             </div>
           )}
