@@ -12,8 +12,8 @@ interface Props {
   // Manual add controls
   onAdd: (type:
     | "image" | "video" | "text" | "document" | "logo" | "quote"
-    | "concept" | "brandMark" | "palette" | "typeSample" | "audio"
-    | "storyboardFrame" | "calendarSlot" | "email" | "chatMessage" | "section"
+    | "concept" | "palette" | "typeSample" | "audio"
+    | "storyboardFrame" | "calendarSlot" | "email" | "section"
     | "weather" | "stock" | "map" | "link" | "metric" | "chart"
     | "code" | "checklist" | "product" | "flight" | "poll") => void;
   onRemoveLast: () => void;
