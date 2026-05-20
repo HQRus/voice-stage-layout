@@ -36,7 +36,18 @@ export type ItemType =
   | "checklist"
   | "product"
   | "flight"
-  | "poll";
+  | "poll"
+  // video-creation surfaces
+  | "script"
+  | "shotList"
+  | "reel"
+  | "adVariant"
+  | "caption"
+  | "thumbnail"
+  | "timeline"
+  | "subtitleStrip"
+  | "gallery"
+  | "transition";
 
 export type LayoutIntent =
   | "auto"
@@ -58,7 +69,11 @@ export type LayoutIntent =
   | "presentationKit"
   | "calendar"
   | "confirmation"
-  | "transcript";
+  | "transcript"
+  // video-creation
+  | "reelStack"
+  | "adVariants"
+  | "editTimeline";
 
 export type LayoutRole =
   | "hero"
