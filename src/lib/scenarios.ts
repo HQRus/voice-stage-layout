@@ -437,13 +437,15 @@ const support: Scenario = {
   name: "Refund request",
   states: [
     {
-      label: "Conversation so far",
-      prompt: "Pull up the customer thread.",
-      intent: "transcript",
+      label: "Customer note",
+      prompt: "Pull up the customer's request.",
+      intent: "confirmation",
       items: [
-        make.chat("Maya (customer)", "Hi — my order #4821 arrived broken. Can I get a refund?", "9:02"),
-        make.chat("Maya (customer)", "Thanks. I'd prefer a refund over a replacement.", "9:03"),
-        make.chat("Maya (customer)", "Yes please.", "9:04"),
+        make.email(
+          "maya@example.com",
+          "Order #4821 arrived broken",
+          "Hi — my order #4821 arrived broken. I'd prefer a refund over a replacement if possible. Thanks.",
+        ),
       ],
     },
     {
