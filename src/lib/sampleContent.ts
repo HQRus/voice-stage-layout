@@ -95,6 +95,31 @@ export function makeItem(type: ItemType): MediaItem {
       return { ...base, content: "UA 256", meta: { from: "SFO", to: "JFK", fromTime: "8:15 AM", toTime: "4:42 PM", duration: "5h 27m", airline: "United", date: "Fri Jun 14" } };
     case "poll":
       return { ...base, content: "Where should we go for dinner?", meta: { options: [{ l: "Italian", v: 48 }, { l: "Sushi", v: 30 }, { l: "Tacos", v: 22 }] } };
+    case "script":
+      return { ...base, content: "Open on the product.\nVoice: Meet the new everyday carry.\nCut to hand close-up.\nVoice: Built to last. Made to move.", meta: { title: "VO script", duration: "0:15" } };
+    case "shotList":
+      return { ...base, content: "Launch reel — shot list", meta: { shots: [{ n: 1, t: "Wide — product on desk" }, { n: 2, t: "ECU — texture pan" }, { n: 3, t: "Hand pickup, soft light" }, { n: 4, t: "Tracking shot, walking" }, { n: 5, t: "Logo end card" }] } };
+    case "reel":
+      return { ...base, content: gradients[(gradIdx++) % gradients.length], meta: { caption: "POV: you finally bought it", views: "284K", duration: "0:18" } };
+    case "adVariant":
+      return { ...base, content: gradients[(gradIdx++) % gradients.length], meta: { headline: "Made for movement.", cta: "Shop now", platform: "Meta" } };
+    case "caption":
+      return { ...base, content: "the everyday carry I won't shut up about. comment ⚡ for the link.", meta: { hashtags: ["edc", "minimalism", "designtok"] } };
+    case "thumbnail":
+      return { ...base, content: gradients[(gradIdx++) % gradients.length], meta: { title: "I made this in ONE DAY", badge: "NEW" } };
+    case "timeline":
+      return { ...base, content: "Edit timeline", meta: { tracks: [
+        { name: "V1", color: "#3b82f6", clips: [{ s: 0, e: 0.25 }, { s: 0.28, e: 0.55 }, { s: 0.58, e: 0.85 }, { s: 0.88, e: 1 }] },
+        { name: "V2", color: "#8b5cf6", clips: [{ s: 0.2, e: 0.4 }, { s: 0.6, e: 0.75 }] },
+        { name: "A1", color: "#10b981", clips: [{ s: 0, e: 1 }] },
+        { name: "A2", color: "#f59e0b", clips: [{ s: 0.1, e: 0.9 }] },
+      ] } };
+    case "subtitleStrip":
+      return { ...base, content: "this changed everything", meta: { speaker: "VO", time: "00:04" } };
+    case "gallery":
+      return { ...base, content: "B-roll selects", meta: { tiles: [gradients[0], gradients[1], gradients[2], gradients[3], gradients[4], gradients[5]] } };
+    case "transition":
+      return { ...base, content: "Whip pan", meta: { from: "Wide", to: "ECU", duration: "8 frames" } };
   }
 }
 
