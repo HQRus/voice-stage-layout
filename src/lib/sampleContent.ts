@@ -108,9 +108,6 @@ export const make = {
   concept: (title: string, body: string, tag: string) => ({
     id: id(), type: "concept" as const, content: body, meta: { title, tag },
   }),
-  brand: (name: string, tagline: string, accent = "#c98664") => ({
-    id: id(), type: "brandMark" as const, content: name, meta: { tagline, accent },
-  }),
   palette: (name: string, swatches: string[]) => ({
     id: id(), type: "palette" as const, content: name, meta: { swatches },
   }),
