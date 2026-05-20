@@ -579,6 +579,7 @@ const briefing: Scenario = {
           "stratechery.com",
           "A long read on org design, async work, and why 6-person teams keep outpacing 60-person ones.",
           "https://stratechery.com/2026/small-teams",
+          "linear-gradient(135deg, #f59e0b 0%, #ef4444 60%, #7c3aed 100%)",
         ),
       ],
     },
