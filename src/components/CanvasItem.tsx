@@ -33,10 +33,19 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
   return (
     <motion.div
       layout
-      initial={{ scale: 0.4, rotate: 0, x: centerX, y: centerY, width, height }}
-      animate={{ x, y, width, height, rotate: rotation, scale: 1 }}
-      exit={{ scale: 0.4, x: centerX, y: centerY }}
-      transition={{ type: "spring", stiffness: 140, damping: 22, mass: 0.9 }}
+      initial={{ opacity: 0, scale: 0.4, rotate: 0, x: centerX, y: centerY, width, height }}
+      animate={{
+        x, y, width, height, rotate: rotation, scale: 1,
+        opacity: [0, 0, 1],
+      }}
+      exit={{
+        scale: 0.4, x: centerX, y: centerY,
+        opacity: [1, 1, 0],
+      }}
+      transition={{
+        type: "spring", stiffness: 140, damping: 22, mass: 0.9,
+        opacity: { duration: 0.6, times: [0, 0.65, 1], ease: "easeOut" },
+      }}
       style={{
         position: "absolute",
         zIndex,
