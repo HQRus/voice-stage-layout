@@ -273,19 +273,18 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
     case "storyboardFrame": {
       const frame = Number(meta.frame ?? 0);
       const caption = String(meta.caption ?? "");
-      const captionH = caption ? 44 : 0;
       return (
         <div className="w-full h-full flex flex-col">
           <div
-            className="relative w-full overflow-hidden bg-card"
-            style={{ ...radiusStyle, height: `calc(100% - ${captionH}px)`, background: item.content }}
+            className="relative flex-1 min-h-0 w-full overflow-hidden bg-card"
+            style={{ ...radiusStyle, background: item.content, boxShadow }}
           >
-            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-background/85 text-[11px] tabular-nums font-medium text-foreground">
+            <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background/90 text-xs tabular-nums font-display font-semibold text-foreground">
               {String(frame).padStart(2, "0")}
             </div>
           </div>
           {caption && (
-            <div className="pt-2 px-1 text-xs text-foreground/75 leading-snug" style={{ height: captionH }}>
+            <div className="pt-3 px-1 text-sm text-foreground/75 leading-snug font-display shrink-0">
               {caption}
             </div>
           )}
@@ -310,7 +309,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{day}</div>
-            <div className="text-base text-foreground font-medium">{item.content} <span className="text-muted-foreground text-sm font-normal">· {duration}</span></div>
+            <div className="text-base text-foreground font-display font-semibold">{item.content} <span className="text-muted-foreground text-sm font-normal">· {duration}</span></div>
             {(title || withWho) && (
               <div className="text-xs text-foreground/70 mt-0.5">{title}{withWho ? ` · with ${withWho}` : ""}</div>
             )}
@@ -327,36 +326,24 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
       return (
         <div className={`w-full h-full ${shadow} bg-card flex flex-col`} style={radiusStyle}>
           <div className="px-7 pt-6 pb-4 border-b border-border/60 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-accent/15 text-accent flex items-center justify-center"><Mail className="w-4 h-4" /></div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Email · sent</div>
-              <div className="text-xs text-foreground/70">to {to}</div>
+            <div className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center"><Mail className="w-5 h-5" /></div>
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Email · sent</div>
+              <div className="text-sm text-foreground/70 truncate font-display">to {to}</div>
             </div>
           </div>
-          <div className="px-7 py-5 flex-1">
-            <h3 className="font-serif-display text-xl text-foreground leading-tight">{subject}</h3>
-            <p className="text-sm text-foreground/80 leading-relaxed mt-4 whitespace-pre-wrap">{item.content}</p>
+          <div className="px-7 py-6 flex-1">
+            <h3 className="font-display font-bold text-2xl text-foreground leading-tight tracking-tight">{subject}</h3>
+            <p className="text-lg text-foreground/80 leading-relaxed mt-4 whitespace-pre-wrap font-display">{item.content}</p>
           </div>
-          <div className="px-7 py-3 border-t border-border/60 text-[11px] text-muted-foreground tracking-wider uppercase flex items-center gap-2">
-            <Check className="w-3.5 h-3.5 text-accent" /> Delivered
+          <div className="px-7 py-3 border-t border-border/60 text-[10px] text-muted-foreground tracking-[0.14em] uppercase flex items-center gap-1.5">
+            <Check className="w-3 h-3 text-accent" /> Delivered
           </div>
         </div>
       );
     }
 
-    case "chatMessage": {
-      const speaker = String(meta.speaker ?? "");
-      const time = String(meta.time ?? "");
-      const isYou = speaker.toLowerCase() === "you";
-      return (
-        <div className="w-full h-full flex" style={{ justifyContent: isYou ? "flex-end" : "flex-start" }}>
-          <div className={`max-w-[78%] px-4 py-3 rounded-2xl ${isYou ? "bg-accent text-accent-foreground" : "bg-muted text-foreground"}`}>
-            <div className="text-[10px] uppercase tracking-[0.18em] opacity-60 mb-1">{speaker} · {time}</div>
-            <div className="text-sm leading-snug">{item.content}</div>
-          </div>
-        </div>
-      );
-    }
+
 
     case "section":
       return (
