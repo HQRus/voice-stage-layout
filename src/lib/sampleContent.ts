@@ -203,4 +203,41 @@ export const make = {
   poll: (question: string, options: Array<{ l: string; v: number }>) => ({
     id: id(), type: "poll" as const, content: question, meta: { options },
   }),
+  // --- video-creation builders ---
+  script: (title: string, lines: string, duration = "0:15") => ({
+    id: id(), type: "script" as const, content: lines, meta: { title, duration },
+  }),
+  shotList: (title: string, shots: Array<{ n: number; t: string }>) => ({
+    id: id(), type: "shotList" as const, content: title, meta: { shots },
+  }),
+  reel: (caption: string, views = "12.4K", duration = "0:18", grad?: string) => ({
+    id: id(), type: "reel" as const,
+    content: grad ?? gradients[gradIdx++ % gradients.length],
+    meta: { caption, views, duration },
+  }),
+  adVariant: (headline: string, cta: string, platform = "Meta", grad?: string) => ({
+    id: id(), type: "adVariant" as const,
+    content: grad ?? gradients[gradIdx++ % gradients.length],
+    meta: { headline, cta, platform },
+  }),
+  caption: (text: string, hashtags: string[] = []) => ({
+    id: id(), type: "caption" as const, content: text, meta: { hashtags },
+  }),
+  thumbnail: (title: string, badge?: string, grad?: string) => ({
+    id: id(), type: "thumbnail" as const,
+    content: grad ?? gradients[gradIdx++ % gradients.length],
+    meta: { title, badge },
+  }),
+  timeline: (tracks: Array<{ name: string; color: string; clips: Array<{ s: number; e: number }> }>) => ({
+    id: id(), type: "timeline" as const, content: "Edit timeline", meta: { tracks },
+  }),
+  subtitleStrip: (text: string, speaker = "VO", time = "00:00") => ({
+    id: id(), type: "subtitleStrip" as const, content: text, meta: { speaker, time },
+  }),
+  gallery: (title: string, tiles: string[]) => ({
+    id: id(), type: "gallery" as const, content: title, meta: { tiles },
+  }),
+  transition: (name: string, from: string, to: string, duration = "8 frames") => ({
+    id: id(), type: "transition" as const, content: name, meta: { from, to, duration },
+  }),
 };
