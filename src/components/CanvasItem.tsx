@@ -32,7 +32,7 @@ export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmo
 
   // For visible-overflow types (video, storyboardFrame, section), the inner
   // child renders the visible rectangle, so the shadow must be applied there.
-  const innerHandlesShadow = item.type === "section" || item.type === "storyboardFrame" || item.type === "video";
+  const innerHandlesShadow = item.type === "section" || item.type === "storyboardFrame";
 
   return (
     <motion.div
