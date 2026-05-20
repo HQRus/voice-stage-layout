@@ -123,14 +123,14 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
 
     case "quote": {
       const area = item.width * item.height;
-      const fontSize = Math.max(20, Math.min(60, Math.sqrt(area) / 9));
+      const fontSize = Math.max(28, Math.min(80, Math.sqrt(area) / 7));
       return (
         <div
-          className={`w-full h-full ${shadow} bg-card p-8 flex flex-col justify-center font-serif-display text-foreground`}
+          className={`w-full h-full ${shadow} bg-card p-8 flex flex-col justify-center font-display text-foreground`}
           style={radiusStyle}
         >
-          <div className="text-accent text-4xl leading-none mb-2">"</div>
-          <p className="leading-[1.15] tracking-tight" style={{ fontSize }}>{item.content}</p>
+          <div className="text-accent text-5xl leading-none mb-2 font-display font-bold">"</div>
+          <p className="leading-[1.1] tracking-tight font-semibold" style={{ fontSize }}>{item.content}</p>
         </div>
       );
     }
@@ -138,11 +138,11 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
     case "document":
       return (
         <div className={`w-full h-full ${shadow} bg-card overflow-hidden flex flex-col`} style={radiusStyle}>
-          <div className="px-8 pt-7 pb-3 border-b border-border/60">
+          <div className="px-8 pt-7 pb-4 border-b border-border/60">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Document</div>
-            <h3 className="font-serif-display text-xl text-foreground mt-1">{String(meta.title ?? "Untitled")}</h3>
+            <h3 className="font-display font-bold text-3xl text-foreground mt-1 tracking-tight">{String(meta.title ?? "Untitled")}</h3>
           </div>
-          <div className="px-8 py-6 overflow-y-auto text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+          <div className="px-8 py-6 overflow-y-auto text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap font-display">
             {item.content}
           </div>
         </div>
@@ -152,7 +152,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
       const color = (meta.color as string | undefined) ?? "#111";
       return (
         <div className={`w-full h-full ${shadow} bg-card flex items-center justify-center p-6`} style={radiusStyle}>
-          <div className="font-display tracking-tight" style={{ color, fontSize: Math.max(24, Math.min(item.width, item.height) / 5) }}>
+          <div className="font-display tracking-tight font-bold" style={{ color, fontSize: Math.max(28, Math.min(item.width, item.height) / 4.5) }}>
             {item.content}
           </div>
         </div>
@@ -162,32 +162,13 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
     // -------- agent surfaces --------
     case "concept": {
       const title = String(meta.title ?? "");
-      const tag = String(meta.tag ?? "");
       return (
-        <div className={`w-full h-full ${shadow} bg-card p-7 flex flex-col`} style={radiusStyle}>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-accent">{tag}</div>
-          <h3 className="font-serif-display text-2xl text-foreground mt-3 leading-tight">{title}</h3>
-          <p className="text-sm text-foreground/75 leading-relaxed mt-4">{item.content}</p>
+        <div className={`w-full h-full ${shadow} bg-card p-8 flex flex-col`} style={radiusStyle}>
+          <h3 className="font-display font-bold text-5xl text-foreground leading-[1.05] tracking-tight">{title}</h3>
+          <p className="text-lg text-foreground/75 leading-snug mt-5 font-display">{item.content}</p>
           <div className="mt-auto pt-4 text-[11px] text-muted-foreground tracking-widest uppercase">
             Pick this →
           </div>
-        </div>
-      );
-    }
-
-    case "brandMark": {
-      const tagline = String(meta.tagline ?? "");
-      const accent = String(meta.accent ?? "#c98664");
-      return (
-        <div
-          className={`w-full h-full ${shadow} flex flex-col justify-center items-start px-10`}
-          style={{ ...radiusStyle, background: `linear-gradient(135deg, ${accent}22 0%, transparent 70%)`, backgroundColor: "hsl(var(--card))" }}
-        >
-          <div className="text-[10px] uppercase tracking-[0.25em]" style={{ color: accent }}>Brand</div>
-          <h2 className="font-serif-display text-foreground mt-3 leading-[0.95]" style={{ fontSize: Math.min(item.height * 0.32, 76) }}>
-            {item.content}
-          </h2>
-          {tagline && <p className="mt-4 text-foreground/70 text-base italic">{tagline}</p>}
         </div>
       );
     }
@@ -198,7 +179,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
         <div className={`w-full h-full ${shadow} bg-card flex flex-col`} style={radiusStyle}>
           <div className="px-5 pt-4 pb-3 flex items-baseline justify-between">
             <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Palette</div>
-            <div className="text-sm text-foreground/80">{item.content}</div>
+            <div className="text-base font-display font-semibold text-foreground/80">{item.content}</div>
           </div>
           <div className="flex-1 flex">
             {swatches.map((c, i) => (
@@ -213,18 +194,23 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
 
     case "typeSample": {
       const display = String(meta.display ?? "Display");
-      const body = String(meta.body ?? "Body");
-      const sample = String(meta.sample ?? "");
+      const alphabetSize = Math.max(22, Math.min(item.width / 14, item.height * 0.18));
       return (
-        <div className={`w-full h-full ${shadow} bg-card p-7 flex flex-col`} style={radiusStyle}>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Typography</div>
-          <div className="font-serif-display text-foreground mt-2 leading-none" style={{ fontSize: Math.min(item.height * 0.38, 110) }}>
-            {item.content}
+        <div className={`w-full h-full ${shadow} bg-card p-8 flex flex-col justify-between`} style={radiusStyle}>
+          <div
+            className="font-display font-bold text-foreground leading-[1.05] tracking-tight break-words"
+            style={{ fontSize: alphabetSize }}
+          >
+            ABCDEFGHIJKLM
+            <br />
+            NOPQRSTUVWXYZ
+            <br />
+            abcdefghijklm
+            <br />
+            nopqrstuvwxyz
           </div>
-          <div className="mt-auto space-y-2">
-            <div className="text-sm text-foreground">{display} <span className="text-muted-foreground">/ Display</span></div>
-            <div className="text-sm text-foreground">{body} <span className="text-muted-foreground">/ Body</span></div>
-            {sample && <p className="text-foreground/70 text-sm italic mt-3">{sample}</p>}
+          <div className="mt-6 pt-4 border-t border-border/60 text-base font-display font-semibold text-foreground tracking-tight">
+            {display}
           </div>
         </div>
       );
