@@ -15,7 +15,9 @@ interface Props {
     | "concept" | "palette" | "typeSample" | "audio"
     | "storyboardFrame" | "calendarSlot" | "email" | "section"
     | "weather" | "stock" | "map" | "link" | "metric" | "chart"
-    | "code" | "checklist" | "product" | "flight" | "poll") => void;
+    | "code" | "checklist" | "product" | "flight" | "poll"
+    | "script" | "shotList" | "reel" | "adVariant" | "caption"
+    | "thumbnail" | "timeline" | "subtitleStrip" | "gallery" | "transition") => void;
   onRemoveLast: () => void;
   onShuffle: () => void;
   onClear: () => void;
@@ -69,6 +71,9 @@ const intents: { value: LayoutIntent; label: string }[] = [
   { value: "logos", label: "Logos" },
   { value: "document", label: "Document" },
   { value: "presentation", label: "Presentation slide" },
+  { value: "reelStack", label: "Reel stack (9:16)" },
+  { value: "adVariants", label: "Ad variants" },
+  { value: "editTimeline", label: "Edit timeline" },
 ];
 
 export function ControlsPanel(p: Props) {
@@ -231,6 +236,19 @@ export function ControlsPanel(p: Props) {
                 <Btn onClick={() => p.onAdd("product")}>Product</Btn>
                 <Btn onClick={() => p.onAdd("flight")}>Flight</Btn>
                 <Btn onClick={() => p.onAdd("poll")}>Poll</Btn>
+              </Grid>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground pt-3">Video creation</div>
+              <Grid>
+                <Btn onClick={() => p.onAdd("script")}>Script</Btn>
+                <Btn onClick={() => p.onAdd("shotList")}>Shot list</Btn>
+                <Btn onClick={() => p.onAdd("reel")}>Reel</Btn>
+                <Btn onClick={() => p.onAdd("adVariant")}>Ad variant</Btn>
+                <Btn onClick={() => p.onAdd("caption")}>Caption</Btn>
+                <Btn onClick={() => p.onAdd("thumbnail")}>Thumbnail</Btn>
+                <Btn onClick={() => p.onAdd("timeline")}>Timeline</Btn>
+                <Btn onClick={() => p.onAdd("subtitleStrip")}>Subtitle</Btn>
+                <Btn onClick={() => p.onAdd("gallery")}>Gallery</Btn>
+                <Btn onClick={() => p.onAdd("transition")}>Transition</Btn>
               </Grid>
               <div className="pt-3">
                 <Grid>

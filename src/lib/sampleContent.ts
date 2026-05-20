@@ -95,6 +95,31 @@ export function makeItem(type: ItemType): MediaItem {
       return { ...base, content: "UA 256", meta: { from: "SFO", to: "JFK", fromTime: "8:15 AM", toTime: "4:42 PM", duration: "5h 27m", airline: "United", date: "Fri Jun 14" } };
     case "poll":
       return { ...base, content: "Where should we go for dinner?", meta: { options: [{ l: "Italian", v: 48 }, { l: "Sushi", v: 30 }, { l: "Tacos", v: 22 }] } };
+    case "script":
+      return { ...base, content: "Open on the product.\nVoice: Meet the new everyday carry.\nCut to hand close-up.\nVoice: Built to last. Made to move.", meta: { title: "VO script", duration: "0:15" } };
+    case "shotList":
+      return { ...base, content: "Launch reel — shot list", meta: { shots: [{ n: 1, t: "Wide — product on desk" }, { n: 2, t: "ECU — texture pan" }, { n: 3, t: "Hand pickup, soft light" }, { n: 4, t: "Tracking shot, walking" }, { n: 5, t: "Logo end card" }] } };
+    case "reel":
+      return { ...base, content: gradients[(gradIdx++) % gradients.length], meta: { caption: "POV: you finally bought it", views: "284K", duration: "0:18" } };
+    case "adVariant":
+      return { ...base, content: gradients[(gradIdx++) % gradients.length], meta: { headline: "Made for movement.", cta: "Shop now", platform: "Meta" } };
+    case "caption":
+      return { ...base, content: "the everyday carry I won't shut up about. comment ⚡ for the link.", meta: { hashtags: ["edc", "minimalism", "designtok"] } };
+    case "thumbnail":
+      return { ...base, content: gradients[(gradIdx++) % gradients.length], meta: { title: "I made this in ONE DAY", badge: "NEW" } };
+    case "timeline":
+      return { ...base, content: "Edit timeline", meta: { tracks: [
+        { name: "V1", color: "#3b82f6", clips: [{ s: 0, e: 0.25 }, { s: 0.28, e: 0.55 }, { s: 0.58, e: 0.85 }, { s: 0.88, e: 1 }] },
+        { name: "V2", color: "#8b5cf6", clips: [{ s: 0.2, e: 0.4 }, { s: 0.6, e: 0.75 }] },
+        { name: "A1", color: "#10b981", clips: [{ s: 0, e: 1 }] },
+        { name: "A2", color: "#f59e0b", clips: [{ s: 0.1, e: 0.9 }] },
+      ] } };
+    case "subtitleStrip":
+      return { ...base, content: "this changed everything", meta: { speaker: "VO", time: "00:04" } };
+    case "gallery":
+      return { ...base, content: "B-roll selects", meta: { tiles: [gradients[0], gradients[1], gradients[2], gradients[3], gradients[4], gradients[5]] } };
+    case "transition":
+      return { ...base, content: "Whip pan", meta: { from: "Wide", to: "ECU", duration: "8 frames" } };
   }
 }
 
@@ -177,5 +202,42 @@ export const make = {
   }),
   poll: (question: string, options: Array<{ l: string; v: number }>) => ({
     id: id(), type: "poll" as const, content: question, meta: { options },
+  }),
+  // --- video-creation builders ---
+  script: (title: string, lines: string, duration = "0:15") => ({
+    id: id(), type: "script" as const, content: lines, meta: { title, duration },
+  }),
+  shotList: (title: string, shots: Array<{ n: number; t: string }>) => ({
+    id: id(), type: "shotList" as const, content: title, meta: { shots },
+  }),
+  reel: (caption: string, views = "12.4K", duration = "0:18", grad?: string) => ({
+    id: id(), type: "reel" as const,
+    content: grad ?? gradients[gradIdx++ % gradients.length],
+    meta: { caption, views, duration },
+  }),
+  adVariant: (headline: string, cta: string, platform = "Meta", grad?: string) => ({
+    id: id(), type: "adVariant" as const,
+    content: grad ?? gradients[gradIdx++ % gradients.length],
+    meta: { headline, cta, platform },
+  }),
+  caption: (text: string, hashtags: string[] = []) => ({
+    id: id(), type: "caption" as const, content: text, meta: { hashtags },
+  }),
+  thumbnail: (title: string, badge?: string, grad?: string) => ({
+    id: id(), type: "thumbnail" as const,
+    content: grad ?? gradients[gradIdx++ % gradients.length],
+    meta: { title, badge },
+  }),
+  timeline: (tracks: Array<{ name: string; color: string; clips: Array<{ s: number; e: number }> }>) => ({
+    id: id(), type: "timeline" as const, content: "Edit timeline", meta: { tracks },
+  }),
+  subtitleStrip: (text: string, speaker = "VO", time = "00:00") => ({
+    id: id(), type: "subtitleStrip" as const, content: text, meta: { speaker, time },
+  }),
+  gallery: (title: string, tiles: string[]) => ({
+    id: id(), type: "gallery" as const, content: title, meta: { tiles },
+  }),
+  transition: (name: string, from: string, to: string, duration = "8 frames") => ({
+    id: id(), type: "transition" as const, content: name, meta: { from, to, duration },
   }),
 };

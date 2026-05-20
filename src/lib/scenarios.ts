@@ -756,7 +756,580 @@ const shopping: Scenario = {
   ],
 };
 
+// ================================================================
+// VIDEO CREATION WORKFLOW SCENARIOS
+// ================================================================
+
+const G = {
+  warm: "linear-gradient(135deg, #fef3c7 0%, #f59e0b 60%, #b45309 100%)",
+  cool: "linear-gradient(135deg, #dbeafe 0%, #3b82f6 60%, #1e3a8a 100%)",
+  noir: "linear-gradient(135deg, #1f2937 0%, #111827 100%)",
+  sunset: "linear-gradient(135deg, #fb923c 0%, #ec4899 50%, #8b5cf6 100%)",
+  ocean: "linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)",
+  forest: "linear-gradient(135deg, #84cc16 0%, #166534 100%)",
+  mint: "linear-gradient(135deg, #a7f3d0 0%, #10b981 100%)",
+  rose: "linear-gradient(135deg, #fecdd3 0%, #e11d48 100%)",
+  cream: "linear-gradient(135deg, #fffbeb 0%, #fde68a 100%)",
+  steel: "linear-gradient(135deg, #cbd5e1 0%, #475569 100%)",
+};
+
+// ----------------------------------------------------------------
+// 1. TikTok UGC reel — sneaker brand
+// ----------------------------------------------------------------
+const tiktokReel: Scenario = {
+  id: "tiktok-reel",
+  name: "TikTok UGC reel",
+  states: [
+    {
+      label: "Three hook concepts",
+      prompt: "Make me a TikTok for the new runner drop.",
+      intent: "concepts",
+      items: [
+        make.concept("POV unboxing", "First-person, no face. Box reveal → close-ups → first run.", "POV"),
+        make.concept("Get ready with me", "Lace up, fit check, mirror shot, walk out.", "GRWM"),
+        make.concept("Street test", "Friend hands the shoe over. Cut to running.", "Trend"),
+      ],
+    },
+    {
+      label: "VO script — POV unboxing",
+      prompt: "Use the POV one. Write the voiceover.",
+      intent: "document",
+      items: [
+        make.script("POV unboxing — 18s", "Hands-only. Box on desk.\nVoice: Okay, the drop everyone's been waiting on.\nLid lifts. Tissue pulls back.\nVoice: Foam's heavier than I expected.\nLace pull, side profile.\nVoice: But the upper? Unreal.\nCut to feet, first step outside.\nVoice: Run incoming.", "0:18"),
+      ],
+    },
+    {
+      label: "Shot list",
+      prompt: "Break it into shots.",
+      intent: "confirmation",
+      items: [
+        make.shotList("POV unboxing — 18s", [
+          { n: 1, t: "Wide — box on desk, soft window light" },
+          { n: 2, t: "ECU — lid lifting, tissue rustle" },
+          { n: 3, t: "Top-down — shoe in box, hero beat" },
+          { n: 4, t: "Macro — lace pull, foam squeeze" },
+          { n: 5, t: "Outdoor — first step, slow-mo" },
+          { n: 6, t: "Logo end card, 1s" },
+        ]),
+      ],
+    },
+    {
+      label: "Three reel cuts",
+      prompt: "Show me three edits.",
+      intent: "reelStack",
+      items: [
+        make.reel("POV: the drop finally landed 👟", "284K", "0:18", G.sunset),
+        make.reel("rate the unboxing 1-10", "112K", "0:21", G.warm),
+        make.reel("foam check incoming", "67K", "0:15", G.noir),
+      ],
+    },
+    {
+      label: "Caption + hashtags",
+      prompt: "Write the caption.",
+      intent: "confirmation",
+      items: [
+        make.caption("the drop finally landed. foam check at 0:14, first run at 0:16. who's copping?", ["sneakertok", "unboxing", "runner", "fyp", "newdrop"]),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 2. YouTube Short — creator title strategy
+// ----------------------------------------------------------------
+const youtubeShort: Scenario = {
+  id: "youtube-short",
+  name: "YouTube Short",
+  states: [
+    {
+      label: "Three hook angles",
+      prompt: "I built a desk in a weekend. Make it a short.",
+      intent: "concepts",
+      items: [
+        make.concept("Before / after", "Empty room → finished desk. Speed-ramp the middle.", "Reveal"),
+        make.concept("Mistake reel", "Open with the cut that went wrong. Then save it.", "Tension"),
+        make.concept("Tool of the day", "One tool drives the whole edit. Track saw hero.", "Niche"),
+      ],
+    },
+    {
+      label: "Thumbnail options",
+      prompt: "Make three thumbnails.",
+      intent: "directions",
+      items: [
+        make.thumbnail("I BUILT THIS IN 48 HRS", "NEW", G.warm),
+        make.thumbnail("$87 DESK CHALLENGE", "WOW", G.cool),
+        make.thumbnail("DON'T MAKE THIS CUT", "FAIL", G.rose),
+      ],
+    },
+    {
+      label: "Subtitle styling",
+      prompt: "Show me the burned-in caption style.",
+      intent: "confirmation",
+      items: [
+        make.subtitleStrip("this is where it almost went wrong", "VO", "00:14"),
+      ],
+    },
+    {
+      label: "Final reel",
+      prompt: "Render the short.",
+      intent: "mediaPlayer",
+      items: [
+        make.video("48hr Desk Build — Short", "0:58"),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 3. Instagram ad — DTC skincare
+// ----------------------------------------------------------------
+const instagramAd: Scenario = {
+  id: "instagram-ad",
+  name: "Instagram ad set",
+  states: [
+    {
+      label: "Three angles",
+      prompt: "I need ad creative for the new serum. Three angles.",
+      intent: "concepts",
+      items: [
+        make.concept("Founder story", "30s talking head. Why I made this.", "Trust"),
+        make.concept("Before / after", "7-day glow time-lapse. Receipts.", "Proof"),
+        make.concept("Ingredient hero", "Macro shots of the bottle + the molecule.", "Premium"),
+      ],
+    },
+    {
+      label: "Static ad variants",
+      prompt: "Show me three static ads we can A/B.",
+      intent: "adVariants",
+      items: [
+        make.adVariant("Skin that actually shows up.", "Try it free", "Meta", G.cream),
+        make.adVariant("7 days. Real glow.", "See results", "Meta", G.rose),
+        make.adVariant("One ingredient. No fluff.", "Shop now", "Meta", G.mint),
+      ],
+    },
+    {
+      label: "Reel — 9:16",
+      prompt: "Now make the reel cut.",
+      intent: "reelStack",
+      items: [
+        make.reel("the founder's 30s pitch ✨", "48K", "0:32", G.cream),
+        make.reel("7 days of glow — receipts", "94K", "0:28", G.rose),
+        make.reel("one drop. that's it.", "22K", "0:18", G.mint),
+      ],
+    },
+    {
+      label: "Launch-day metrics",
+      prompt: "How are they performing?",
+      intent: "moodboard",
+      items: [
+        make.metric("$18.4k", "Ad spend", "+$2.1k", true, "today"),
+        make.metric("3.8x", "ROAS", "+0.6x", true, "vs. yesterday"),
+        make.metric("2.1%", "CTR", "+0.4%", true, "best variant: Glow"),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 4. Product launch trailer — gadget
+// ----------------------------------------------------------------
+const productLaunch: Scenario = {
+  id: "product-launch",
+  name: "Product launch film",
+  states: [
+    {
+      label: "Tone directions",
+      prompt: "We're launching the new earbuds. 60s trailer.",
+      intent: "concepts",
+      items: [
+        make.concept("Quiet & cinematic", "Black, slow push-ins, one sound bed.", "Premium"),
+        make.concept("Fast & bold", "Cuts on the beat, color flashes, big type.", "Energetic"),
+        make.concept("Documentary", "Hands-on with the engineers. Voices, lab shots.", "Honest"),
+      ],
+    },
+    {
+      label: "Storyboard — 6 frames",
+      prompt: "Build the storyboard for the cinematic one.",
+      intent: "storyboard",
+      items: [
+        make.storyFrame(1, "Black. Cue tone.", G.noir),
+        make.storyFrame(2, "Buds rotate, single light.", "linear-gradient(135deg, #1f2937 0%, #4b5563 100%)"),
+        make.storyFrame(3, "Logo etch reveals.", "linear-gradient(135deg, #0f172a 0%, #1e40af 100%)"),
+        make.storyFrame(4, "User. Eyes close. Sound enters.", G.cool),
+        make.storyFrame(5, "City fades. Quiet.", "linear-gradient(135deg, #1e3a8a 0%, #000 100%)"),
+        make.storyFrame(6, "Logo. Tagline. Out.", G.noir),
+      ],
+    },
+    {
+      label: "Edit timeline",
+      prompt: "Open the timeline.",
+      intent: "editTimeline",
+      items: [
+        make.timeline([
+          { name: "V1", color: "#3b82f6", clips: [{ s: 0, e: 0.12 }, { s: 0.14, e: 0.28 }, { s: 0.3, e: 0.48 }, { s: 0.5, e: 0.7 }, { s: 0.72, e: 0.9 }, { s: 0.92, e: 1 }] },
+          { name: "V2", color: "#a78bfa", clips: [{ s: 0.4, e: 0.55 }, { s: 0.78, e: 0.88 }] },
+          { name: "A1", color: "#10b981", clips: [{ s: 0, e: 1 }] },
+          { name: "A2", color: "#f59e0b", clips: [{ s: 0.1, e: 0.95 }] },
+          { name: "SFX", color: "#ef4444", clips: [{ s: 0.02, e: 0.06 }, { s: 0.46, e: 0.5 }, { s: 0.96, e: 1 }] },
+        ]),
+        make.video("Earbuds — 60s trailer (rough)", "1:00"),
+      ],
+    },
+    {
+      label: "Launch kit",
+      prompt: "Compile the launch kit.",
+      intent: "presentationKit",
+      items: [
+        make.section("Trailer"),
+        make.video("Earbuds — 60s trailer", "1:00"),
+        make.section("Thumbnails"),
+        make.thumbnail("THE QUIETEST EARBUDS YET", "NEW", G.noir),
+        make.section("Static ads"),
+        make.adVariant("Hear less. Feel more.", "Pre-order", "Meta", G.noir),
+        make.section("Caption"),
+        make.caption("Hear less. Feel more. Pre-orders open at noon ET.", ["audio", "launch", "design"]),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 5. Real estate listing reel
+// ----------------------------------------------------------------
+const realEstateReel: Scenario = {
+  id: "real-estate-reel",
+  name: "Real estate listing reel",
+  states: [
+    {
+      label: "Cover thumbnails",
+      prompt: "New 3BR listing on Elm. Make a reel.",
+      intent: "directions",
+      items: [
+        make.thumbnail("JUST LISTED — 142 ELM", "HOT", G.warm),
+        make.thumbnail("$1.2M · MUST SEE", "OPEN", G.cool),
+        make.thumbnail("INSIDE A $1.2M HOME", "TOUR", G.cream),
+      ],
+    },
+    {
+      label: "Walk-through shots",
+      prompt: "Plan the walk-through.",
+      intent: "confirmation",
+      items: [
+        make.shotList("142 Elm — walk-through", [
+          { n: 1, t: "Drone — pull up to driveway" },
+          { n: 2, t: "Front door push-in, gimbal" },
+          { n: 3, t: "Foyer pan to living room" },
+          { n: 4, t: "Kitchen counter slide" },
+          { n: 5, t: "Primary bedroom reveal" },
+          { n: 6, t: "Backyard pull-out, drone up" },
+        ]),
+      ],
+    },
+    {
+      label: "Three reel cuts",
+      prompt: "Three versions, different vibes.",
+      intent: "reelStack",
+      items: [
+        make.reel("inside the $1.2M elm street listing 🏡", "182K", "0:34", G.warm),
+        make.reel("the kitchen is unreal", "98K", "0:22", G.cream),
+        make.reel("open house Saturday — come thru", "44K", "0:28", G.ocean),
+      ],
+    },
+    {
+      label: "Open house booked",
+      prompt: "Schedule the open house.",
+      intent: "confirmation",
+      items: [
+        {
+          id: "oh-1", type: "calendarSlot", content: "11:00 AM",
+          meta: { day: "Saturday", duration: "3 hr", status: "booked", title: "Open house — 142 Elm", with: "Buyers + agents" },
+        },
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 6. Recipe reel — cooking shortform
+// ----------------------------------------------------------------
+const recipeReel: Scenario = {
+  id: "recipe-reel",
+  name: "Recipe reel",
+  states: [
+    {
+      label: "Three formats",
+      prompt: "Crispy gnocchi recipe. Make it a reel.",
+      intent: "concepts",
+      items: [
+        make.concept("ASMR no-talking", "Sizzles, pours, scrape. Burned subs.", "Sensory"),
+        make.concept("Talking-head fast", "Looking at camera, fast cuts on action.", "Personality"),
+        make.concept("Top-down only", "Overhead lock-off. Hands enter frame.", "Clean"),
+      ],
+    },
+    {
+      label: "Burned-in captions",
+      prompt: "Show the subtitle style.",
+      intent: "confirmation",
+      items: [
+        make.subtitleStrip("get the pan SCREAMING hot", "Chef", "00:06"),
+      ],
+    },
+    {
+      label: "B-roll gallery",
+      prompt: "What b-roll do I need?",
+      intent: "confirmation",
+      items: [
+        make.gallery("B-roll — gnocchi reel", [G.cream, G.warm, G.forest, G.cream, G.warm, G.rose]),
+      ],
+    },
+    {
+      label: "Three cuts",
+      prompt: "Three reel cuts to A/B.",
+      intent: "reelStack",
+      items: [
+        make.reel("crispy gnocchi in 60s 🧈", "412K", "0:58", G.cream),
+        make.reel("you've been cooking gnocchi wrong", "228K", "0:42", G.warm),
+        make.reel("the only recipe i make on tuesdays", "78K", "0:36", G.forest),
+      ],
+    },
+    {
+      label: "Caption",
+      prompt: "Caption it.",
+      intent: "confirmation",
+      items: [
+        make.caption("crispy edges, pillow centers. brown butter + sage. don't skip the lemon.", ["recipe", "30minmeals", "foodtok", "italian"]),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 7. Gym coach UGC
+// ----------------------------------------------------------------
+const gymCoach: Scenario = {
+  id: "gym-coach",
+  name: "Gym coach UGC",
+  states: [
+    {
+      label: "Three series ideas",
+      prompt: "Help me grow my coaching account.",
+      intent: "concepts",
+      items: [
+        make.concept("Form fix Fridays", "Critique a trending lift. Slow-mo + draw-overs.", "Educational"),
+        make.concept("60-sec workouts", "Pure follow-along. No talking, just timer.", "Useful"),
+        make.concept("Myth-buster", "Quote → wrong → here's why.", "Punchy"),
+      ],
+    },
+    {
+      label: "Shot list — form fix",
+      prompt: "Plan the form-fix episode.",
+      intent: "confirmation",
+      items: [
+        make.shotList("Form fix — RDL", [
+          { n: 1, t: "Hook clip — wrong form" },
+          { n: 2, t: "Freeze frame + red arrow" },
+          { n: 3, t: "Side angle, correct form" },
+          { n: 4, t: "Slow-mo hip hinge close-up" },
+          { n: 5, t: "Talking head — 3 cues" },
+          { n: 6, t: "End card — try this set" },
+        ]),
+      ],
+    },
+    {
+      label: "Three reel cuts",
+      prompt: "Three versions.",
+      intent: "reelStack",
+      items: [
+        make.reel("you're doing RDLs wrong (probably)", "612K", "0:54", G.forest),
+        make.reel("the hip hinge that fixed my back", "208K", "0:48", G.mint),
+        make.reel("3 cues. fix it today.", "94K", "0:38", G.steel),
+      ],
+    },
+    {
+      label: "Weekly metrics",
+      prompt: "How's the channel doing?",
+      intent: "moodboard",
+      items: [
+        make.metric("48.2k", "Followers", "+4.1k", true, "this week"),
+        make.metric("2.1M", "Views (7d)", "+38%", true, "form fix hit"),
+        make.metric("6.8%", "Engagement", "+1.2%", true, "above niche avg"),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 8. Podcast clip — finding the moment
+// ----------------------------------------------------------------
+const podcastClip: Scenario = {
+  id: "podcast-clip",
+  name: "Podcast clip",
+  states: [
+    {
+      label: "Three viral moments",
+      prompt: "Find me clip-worthy moments from episode 47.",
+      intent: "concepts",
+      items: [
+        make.concept("The unfiltered take", "Guest disagrees, raises voice. 45s of fire.", "Spicy"),
+        make.concept("Mind-changing stat", "One number reframes the whole topic.", "Curious"),
+        make.concept("Personal story", "Guest opens up about their pivot.", "Human"),
+      ],
+    },
+    {
+      label: "Pulled transcript",
+      prompt: "Pull the unfiltered take.",
+      intent: "confirmation",
+      items: [
+        make.script("Clip — 47:12 to 47:58", "GUEST: No, that's the lie everyone tells.\nHOST: Wait, why?\nGUEST: Because if you actually did the math nobody would do it.\nHOST: Run the math then.\nGUEST: Fine. You're paying for status, not for the product.", "0:46"),
+      ],
+    },
+    {
+      label: "Burned-in caption styling",
+      prompt: "How will the captions look?",
+      intent: "confirmation",
+      items: [
+        make.subtitleStrip("you're paying for STATUS, not the product", "Guest", "47:38"),
+      ],
+    },
+    {
+      label: "Three clip cuts",
+      prompt: "Three cuts for short-form.",
+      intent: "reelStack",
+      items: [
+        make.reel("\"you're paying for STATUS\" 🔥", "1.2M", "0:46", G.noir),
+        make.reel("the lie nobody talks about", "428K", "0:38", G.rose),
+        make.reel("run the math — you won't like it", "184K", "0:42", G.cool),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 9. Travel montage
+// ----------------------------------------------------------------
+const travelMontage: Scenario = {
+  id: "travel-montage",
+  name: "Travel montage",
+  states: [
+    {
+      label: "Three edit vibes",
+      prompt: "Cut my Japan trip into a 60s reel.",
+      intent: "concepts",
+      items: [
+        make.concept("Lo-fi slow", "Film grain, ambient bed, long holds.", "Mellow"),
+        make.concept("Beat-cut", "Sharp cuts on every snare. Up-tempo.", "Hype"),
+        make.concept("Diary voice", "Your VO over wides. Personal.", "Intimate"),
+      ],
+    },
+    {
+      label: "B-roll selects",
+      prompt: "Show me the selects.",
+      intent: "confirmation",
+      items: [
+        make.gallery("Japan — selects", [G.rose, G.cream, G.noir, G.warm, G.cool, G.forest, G.mint, G.sunset, G.ocean]),
+      ],
+    },
+    {
+      label: "Transitions plan",
+      prompt: "What transitions are we using?",
+      intent: "moodboard",
+      items: [
+        make.transition("Whip pan", "Train window", "Tokyo street", "6 frames"),
+        make.transition("Match cut", "Bowl steam", "Bath steam", "1 frame"),
+        make.transition("Light leak", "Shrine torii", "Mountain", "12 frames"),
+      ],
+    },
+    {
+      label: "Edit timeline",
+      prompt: "Open the edit.",
+      intent: "editTimeline",
+      items: [
+        make.timeline([
+          { name: "V1", color: "#ec4899", clips: [{ s: 0, e: 0.08 }, { s: 0.1, e: 0.18 }, { s: 0.2, e: 0.32 }, { s: 0.34, e: 0.46 }, { s: 0.48, e: 0.6 }, { s: 0.62, e: 0.74 }, { s: 0.76, e: 0.88 }, { s: 0.9, e: 1 }] },
+          { name: "V2", color: "#8b5cf6", clips: [{ s: 0.3, e: 0.4 }, { s: 0.7, e: 0.82 }] },
+          { name: "A1", color: "#10b981", clips: [{ s: 0, e: 1 }] },
+          { name: "SFX", color: "#f59e0b", clips: [{ s: 0.18, e: 0.22 }, { s: 0.46, e: 0.5 }, { s: 0.88, e: 0.92 }] },
+        ]),
+        make.video("Japan — 60s reel (v3)", "1:00"),
+      ],
+    },
+    {
+      label: "Final caption",
+      prompt: "Caption it.",
+      intent: "confirmation",
+      items: [
+        make.caption("14 days. 6 cities. one tape. saving every yen i didn't spend on coffee.", ["japan", "travelreel", "filmgrain", "memories"]),
+      ],
+    },
+  ],
+};
+
+// ----------------------------------------------------------------
+// 10. Event recap reel — conference
+// ----------------------------------------------------------------
+const eventRecap: Scenario = {
+  id: "event-recap",
+  name: "Event recap reel",
+  states: [
+    {
+      label: "Three recap angles",
+      prompt: "Cut a recap for the design summit.",
+      intent: "concepts",
+      items: [
+        make.concept("Energy highlight", "Cheers, applause, big stage shots, fast.", "Hype"),
+        make.concept("Talk teaser", "One quote per speaker. Documentary feel.", "Substance"),
+        make.concept("Behind-the-scenes", "Setup, soundcheck, attendee laughs.", "Authentic"),
+      ],
+    },
+    {
+      label: "Best moments storyboard",
+      prompt: "Storyboard the energy cut.",
+      intent: "storyboard",
+      items: [
+        make.storyFrame(1, "Doors open. Crowd flows in.", G.sunset),
+        make.storyFrame(2, "Stage lights up. Logo hits.", G.noir),
+        make.storyFrame(3, "Keynote walks out — applause.", G.warm),
+        make.storyFrame(4, "Attendees laughing in halls.", G.cream),
+        make.storyFrame(5, "After-party. Confetti drop.", G.rose),
+      ],
+    },
+    {
+      label: "Photo gallery",
+      prompt: "Show the photo selects.",
+      intent: "confirmation",
+      items: [
+        make.gallery("Design Summit '26 — selects", [G.sunset, G.noir, G.warm, G.cream, G.rose, G.cool]),
+      ],
+    },
+    {
+      label: "Three cut lengths",
+      prompt: "Cut at 15s, 30s, and 60s.",
+      intent: "reelStack",
+      items: [
+        make.reel("Design Summit '26 in 15s ⚡", "84K", "0:15", G.sunset),
+        make.reel("the 30-second tour", "162K", "0:30", G.warm),
+        make.reel("Design Summit '26 — full recap", "246K", "1:00", G.noir),
+      ],
+    },
+    {
+      label: "Thank-you email",
+      prompt: "Send the thank-you to attendees.",
+      intent: "confirmation",
+      items: [
+        make.email(
+          "attendees@designsummit.co",
+          "thanks for an unreal weekend — recap inside",
+          "What a weekend. 1,400 of you, 38 talks, one packed dance floor. We cut a 60s recap (link below) and dropped every keynote on YouTube. See you in '27.",
+        ),
+      ],
+    },
+  ],
+};
+
 export const scenarios: Scenario[] = [
   catCafe, travel, album, pitch, wedding, support, recipe,
   briefing, launchDash, devReview, shopping,
+  // video creation workflows
+  tiktokReel, youtubeShort, instagramAd, productLaunch, realEstateReel,
+  recipeReel, gymCoach, podcastClip, travelMontage, eventRecap,
 ];
