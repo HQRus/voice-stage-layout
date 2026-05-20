@@ -922,6 +922,12 @@ export function generateLayout(
       const contentHeight = Math.max(viewport.height, (last?.y ?? 0) + (last?.height ?? 0) + 80);
       return { frames, contentHeight, scrollable: contentHeight > viewport.height };
     }
+    case "reelStack":
+      frames = reelStackLayout(items, viewport, options); break;
+    case "adVariants":
+      frames = adVariantsLayout(items, viewport, options); break;
+    case "editTimeline":
+      frames = editTimelineLayout(items, viewport, options); break;
     case "moodboard":
     default:
       frames = moodboardLayout(items, viewport, options);
