@@ -766,6 +766,99 @@ function presentationKitLayout(items: MediaItem[], v: Viewport): { frames: Posit
   return { frames, contentHeight: y + s.y };
 }
 
+// 3 vertical 9:16 reels in a row
+function reelStackLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
+  const s = stage(v);
+  const n = items.length;
+  const gap = Math.max(16, 40 - (opts.overlapAmount ?? 0));
+  const maxH = s.h * 0.92;
+  let h = maxH;
+  let w = (h * 9) / 16;
+  const totalW = w * n + gap * (n - 1);
+  if (totalW > s.w) {
+    w = (s.w - gap * (n - 1)) / n;
+    h = (w * 16) / 9;
+  }
+  const startX = s.x + (s.w - (w * n + gap * (n - 1))) / 2;
+  return items.map((it, i) => ({
+    ...it,
+    focusWeight: 0.85,
+    layoutRole: i === Math.floor(n / 2) ? "hero" : "equal",
+    x: startX + i * (w + gap),
+    y: s.y + (s.h - h) / 2,
+    width: w,
+    height: h,
+    rotation: tilt(it.id, Math.min(opts.rotationAmount ?? 1.5, 2)),
+    zIndex: 5 + i,
+  }));
+}
+
+// Horizontal row of landscape ad creatives (16:9 or 4:5)
+function adVariantsLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
+  const s = stage(v);
+  const n = items.length;
+  const gap = Math.max(16, 36 - (opts.overlapAmount ?? 0));
+  const w = (s.w - gap * (n - 1)) / n;
+  const h = Math.min(s.h * 0.82, (w * 5) / 4);
+  return items.map((it, i) => ({
+    ...it,
+    focusWeight: 0.85,
+    layoutRole: "equal",
+    x: s.x + i * (w + gap),
+    y: s.y + (s.h - h) / 2,
+    width: w,
+    height: h,
+    rotation: tilt(it.id, Math.min(opts.rotationAmount ?? 1.5, 2)),
+    zIndex: 5,
+  }));
+}
+
+// Edit timeline: timeline item full width on top, video preview below
+function editTimelineLayout(items: MediaItem[], v: Viewport, opts: LayoutOptions): PositionedItem[] {
+  const s = stage(v);
+  const timeline = items.find((i) => i.type === "timeline");
+  const others = items.filter((i) => i !== timeline);
+  const frames: PositionedItem[] = [];
+  const tH = Math.min(220, s.h * 0.32);
+  if (timeline) {
+    frames.push({
+      ...timeline,
+      focusWeight: 0.7,
+      layoutRole: "supporting",
+      x: s.x,
+      y: s.y + s.h - tH,
+      width: s.w,
+      height: tH,
+      rotation: 0,
+      zIndex: 10,
+    });
+  }
+  const aboveH = s.h - tH - 24;
+  if (others.length === 0) return frames;
+  if (others.length === 1) {
+    const it = others[0];
+    const w = Math.min(s.w * 0.72, (aboveH * 16) / 9);
+    const h = Math.min(aboveH, (w * 9) / 16);
+    frames.unshift({
+      ...it, focusWeight: 1, layoutRole: "hero",
+      x: s.x + (s.w - w) / 2, y: s.y + (aboveH - h) / 2,
+      width: w, height: h, rotation: 0, zIndex: 8,
+    });
+    return frames;
+  }
+  const gap = 20;
+  const cw = (s.w - gap * (others.length - 1)) / others.length;
+  const ch = Math.min(aboveH, (cw * 9) / 16);
+  others.forEach((it, i) => {
+    frames.unshift({
+      ...it, focusWeight: 0.7, layoutRole: i === 0 ? "hero" : "supporting",
+      x: s.x + i * (cw + gap), y: s.y + (aboveH - ch) / 2,
+      width: cw, height: ch, rotation: tilt(it.id, opts.rotationAmount ?? 1.5), zIndex: 8,
+    });
+  });
+  return frames;
+}
+
 // ------------------------------------------------------------
 // Public API
 // ------------------------------------------------------------
