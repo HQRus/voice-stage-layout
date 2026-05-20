@@ -368,7 +368,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
             <CloudSun className="w-10 h-10 text-accent" strokeWidth={1.4} />
           </div>
           <div className="flex items-end justify-between">
-            <div className="font-serif-display text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.45, 96) }}>
+            <div className="font-display font-bold text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.45, 96) }}>
               {item.content}
             </div>
             {(high !== undefined || low !== undefined) && (
@@ -401,7 +401,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
               <div className="text-xs text-muted-foreground truncate">{name}</div>
             </div>
             <div className="text-right">
-              <div className="font-serif-display text-foreground tabular-nums" style={{ fontSize: Math.min(item.height * 0.22, 32) }}>${price}</div>
+              <div className="font-display font-bold text-foreground tabular-nums" style={{ fontSize: Math.min(item.height * 0.22, 32) }}>${price}</div>
               <div className="text-xs flex items-center justify-end gap-1 tabular-nums" style={{ color: accentColor }}>
                 {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {change} ({changePct})
@@ -478,7 +478,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
       return (
         <div className={`w-full h-full ${shadow} bg-card p-6 flex flex-col justify-center`} style={radiusStyle}>
           <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
-          <div className="font-serif-display text-foreground mt-2 leading-none tabular-nums" style={{ fontSize: Math.min(item.height * 0.42, 80) }}>
+          <div className="font-display font-bold text-foreground mt-2 leading-none tabular-nums" style={{ fontSize: Math.min(item.height * 0.42, 80) }}>
             {item.content}
           </div>
           {delta && (
@@ -596,7 +596,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
           </div>
           <div className="flex items-center justify-between gap-4 my-3">
             <div className="text-center">
-              <div className="font-serif-display text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{from}</div>
+              <div className="font-display font-bold text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{from}</div>
               <div className="text-xs text-muted-foreground tabular-nums mt-1">{fromTime}</div>
             </div>
             <div className="flex-1 flex items-center gap-2 min-w-0">
@@ -605,7 +605,7 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
               <div className="flex-1 border-t border-dashed border-border" />
             </div>
             <div className="text-center">
-              <div className="font-serif-display text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{to}</div>
+              <div className="font-display font-bold text-foreground leading-none" style={{ fontSize: Math.min(item.height * 0.22, 40) }}>{to}</div>
               <div className="text-xs text-muted-foreground tabular-nums mt-1">{toTime}</div>
             </div>
           </div>
