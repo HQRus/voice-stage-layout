@@ -153,8 +153,8 @@ export const make = {
   map: (place: string, location: string, subtitle?: string) => ({
     id: id(), type: "map" as const, content: place, meta: { location, subtitle },
   }),
-  link: (title: string, domain: string, description: string, url: string) => ({
-    id: id(), type: "link" as const, content: title, meta: { domain, description, url },
+  link: (title: string, domain: string, description: string, url: string, image?: string) => ({
+    id: id(), type: "link" as const, content: title, meta: { domain, description, url, image },
   }),
   metric: (value: string, label: string, delta: string, up: boolean, sub?: string) => ({
     id: id(), type: "metric" as const, content: value, meta: { label, delta, up, sub },
