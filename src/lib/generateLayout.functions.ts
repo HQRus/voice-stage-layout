@@ -348,19 +348,19 @@ function sanitizeFrames(frames: unknown[], viewport: { width: number; height: nu
     const content = String(f.content ?? "");
     const rawMeta = toJsonRecord(f.meta);
     const meta = repairMetaForType(type, content, rawMeta, i);
-    const width = clamp(Number(f.width ?? 220), 80, viewport.width);
-    const height = clamp(Number(f.height ?? 160), 72, viewport.height);
+    const width = clamp(toFiniteNumber(f.width, 220), 80, viewport.width);
+    const height = clamp(toFiniteNumber(f.height, 160), 72, viewport.height);
     return {
       id: String(f.id ?? `ai-${i}`),
       type,
       content,
-      x: clamp(Number(f.x ?? 0), 0, Math.max(0, viewport.width - width)),
-      y: clamp(Number(f.y ?? 0), 0, Math.max(0, viewport.height - height)),
+      x: clamp(toFiniteNumber(f.x, 0), 0, Math.max(0, viewport.width - width)),
+      y: clamp(toFiniteNumber(f.y, 0), 0, Math.max(0, viewport.height - height)),
       width,
       height,
-      rotation: clamp(Number(f.rotation ?? 0), -12, 12),
-      zIndex: Number(f.zIndex ?? i + 1),
-      focusWeight: clamp(Number(f.focusWeight ?? 0.5), 0, 1),
+      rotation: clamp(toFiniteNumber(f.rotation, 0), -12, 12),
+      zIndex: toFiniteNumber(f.zIndex, i + 1),
+      focusWeight: clamp(toFiniteNumber(f.focusWeight, 0.5), 0, 1),
       layoutRole:
         typeof f.layoutRole === "string" && ALLOWED_ROLES.includes(f.layoutRole)
           ? f.layoutRole
