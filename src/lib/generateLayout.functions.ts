@@ -513,52 +513,7 @@ more specific type (weather, metric, document, chart, etc.) fits the data.`;
 SOURCE DATA:
 ${sourceData}`;
 
-    const tool = {
-      type: "function",
-      function: {
-        name: "compose_stage_layout",
-        description: "Return the composed Stage layout (theme, intent, frames).",
-        parameters: {
-          type: "object",
-          properties: {
-            theme: { type: "string", description: "Short label for the chosen theme." },
-            intent: {
-              type: "string",
-              enum: [
-                "auto",
-                "equal",
-                "hero",
-                "editorial",
-                "moodboard",
-                "logos",
-                "document",
-                "presentation",
-                "concepts",
-                "brandBoard",
-                "directions",
-                "mascotSet",
-                "storyboard",
-                "mediaPlayer",
-                "presentationKit",
-                "calendar",
-                "confirmation",
-                "transcript",
-                "reelStack",
-                "adVariants",
-                "editTimeline",
-              ],
-            },
-            frames: {
-              type: "array",
-              items: buildFrameSchema(),
-            },
-
-          },
-          required: ["theme", "intent", "frames"],
-          additionalProperties: false,
-        },
-      },
-    };
+    const tool = STAGE_TOOL;
 
     let resp: Response;
     try {
