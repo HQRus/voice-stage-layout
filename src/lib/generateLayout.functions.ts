@@ -100,7 +100,9 @@ function fallbackLayoutFromData(input: string, viewport: { width: number; height
   const heroY = Math.max(pad, (h - heroH) / 2);
   const sideX = heroX + heroW + Math.max(24, w * 0.035);
   const sideW = Math.max(180, w - sideX - pad);
-  const location = String(dataRecord.location ?? dataRecord.city ?? dataRecord.place ?? "Generated layout");
+  const location = String(
+    dataRecord.location ?? dataRecord.city ?? dataRecord.place ?? "Generated layout",
+  );
   const forecast = Array.isArray(dataRecord.forecast) ? dataRecord.forecast.slice(0, 6) : [];
 
   if (forecast.length > 0) {
