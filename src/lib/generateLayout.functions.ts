@@ -238,7 +238,235 @@ function sanitizeFrames(frames: unknown[], viewport: { width: number; height: nu
   });
 }
 
+// ---------- Per-type frame schema (discriminated union) ----------
+// Each type variant lists the meta fields its renderer actually reads,
+// and marks the critical ones as required so the model is forced to
+// populate them (no more "Untitled" documents or empty weather cards).
+
+const BASE_FRAME_PROPS = {
+  id: { type: "string" },
+  content: { type: "string" },
+  x: { type: "number" },
+  y: { type: "number" },
+  width: { type: "number" },
+  height: { type: "number" },
+  rotation: { type: "number" },
+  zIndex: { type: "number" },
+  focusWeight: { type: "number" },
+  layoutRole: { type: "string", enum: ALLOWED_ROLES },
+} as const;
+
+const BASE_REQUIRED = [
+  "id",
+  "type",
+  "content",
+  "x",
+  "y",
+  "width",
+  "height",
+  "rotation",
+  "zIndex",
+  "focusWeight",
+  "layoutRole",
+];
+
+type MetaSpec = {
+  properties: Record<string, unknown>;
+  required: string[];
+  description?: string;
+};
+
+function variant(type: string, metaSpec?: MetaSpec) {
+  const props: Record<string, unknown> = {
+    ...BASE_FRAME_PROPS,
+    type: { type: "string", enum: [type] },
+  };
+  const required = [...BASE_REQUIRED];
+  if (metaSpec) {
+    props.meta = {
+      type: "object",
+      description: metaSpec.description,
+      properties: metaSpec.properties,
+      required: metaSpec.required,
+      additionalProperties: true,
+    };
+    required.push("meta");
+  }
+  return {
+    type: "object",
+    properties: props,
+    required,
+    additionalProperties: true,
+  };
+}
+
+function buildFrameSchema() {
+  const TYPED_VARIANTS_WITH_META: Record<string, MetaSpec> = {
+    document: {
+      properties: { title: { type: "string" } },
+      required: ["title"],
+      description: "Headline document card. content = body text.",
+    },
+    weather: {
+      properties: {
+        location: { type: "string" },
+        condition: { type: "string" },
+        high: { type: "number" },
+        low: { type: "number" },
+      },
+      required: ["location", "condition"],
+      description: "Weather card. content = primary temp like '23°'.",
+    },
+    metric: {
+      properties: {
+        label: { type: "string" },
+        delta: { type: "string" },
+        up: { type: "boolean" },
+      },
+      required: ["label"],
+      description: "KPI card. content = the big number.",
+    },
+    stock: {
+      properties: {
+        name: { type: "string" },
+        price: { type: "string" },
+        change: { type: "string" },
+        changePct: { type: "string" },
+        up: { type: "boolean" },
+        spark: { type: "array", items: { type: "number" } },
+      },
+      required: ["name", "price", "up"],
+    },
+    chart: {
+      properties: {
+        kind: { type: "string", enum: ["bar", "line"] },
+        data: { type: "array", items: { type: "number" } },
+        labels: { type: "array", items: { type: "string" } },
+      },
+      required: ["kind", "data"],
+    },
+    palette: {
+      properties: { swatches: { type: "array", items: { type: "string" } } },
+      required: ["swatches"],
+    },
+    typeSample: {
+      properties: { display: { type: "string" } },
+      required: ["display"],
+    },
+    audio: {
+      properties: {
+        title: { type: "string" },
+        artist: { type: "string" },
+        duration: { type: "string" },
+      },
+      required: ["title"],
+    },
+    email: {
+      properties: { to: { type: "string" }, subject: { type: "string" } },
+      required: ["to", "subject"],
+    },
+    calendarSlot: {
+      properties: {
+        day: { type: "string" },
+        duration: { type: "string" },
+        status: { type: "string", enum: ["open", "booked"] },
+        title: { type: "string" },
+        with: { type: "string" },
+      },
+      required: ["day", "duration", "status"],
+    },
+    map: {
+      properties: {
+        place: { type: "string" },
+        lat: { type: "number" },
+        lon: { type: "number" },
+      },
+      required: ["place"],
+    },
+    link: {
+      properties: {
+        url: { type: "string" },
+        title: { type: "string" },
+        source: { type: "string" },
+      },
+      required: ["url", "title"],
+    },
+    product: {
+      properties: { brand: { type: "string" }, price: { type: "string" } },
+      required: ["brand", "price"],
+    },
+    flight: {
+      properties: {
+        from: { type: "string" },
+        to: { type: "string" },
+        depart: { type: "string" },
+        arrive: { type: "string" },
+        airline: { type: "string" },
+        flight: { type: "string" },
+      },
+      required: ["from", "to", "depart", "arrive"],
+    },
+    poll: {
+      properties: {
+        options: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              label: { type: "string" },
+              pct: { type: "number" },
+            },
+            required: ["label", "pct"],
+          },
+        },
+      },
+      required: ["options"],
+    },
+    code: {
+      properties: { language: { type: "string" } },
+      required: ["language"],
+    },
+    checklist: {
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              text: { type: "string" },
+              done: { type: "boolean" },
+            },
+            required: ["text", "done"],
+          },
+        },
+      },
+      required: ["items"],
+    },
+    concept: {
+      properties: { title: { type: "string" } },
+      required: ["title"],
+    },
+    logo: {
+      properties: { color: { type: "string" } },
+      required: [],
+    },
+    storyboardFrame: {
+      properties: {
+        frame: { type: "number" },
+        caption: { type: "string" },
+      },
+      required: ["frame"],
+    },
+  };
+
+  const oneOf = ALLOWED_TYPES.map((t) =>
+    TYPED_VARIANTS_WITH_META[t] ? variant(t, TYPED_VARIANTS_WITH_META[t]) : variant(t),
+  );
+  return { oneOf };
+}
+
 export type GenerateLayoutInput = {
+
   data: string;
   viewport: { width: number; height: number };
   model?: string;
@@ -322,43 +550,9 @@ ${sourceData}`;
             },
             frames: {
               type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  id: { type: "string" },
-                  type: { type: "string", enum: ALLOWED_TYPES },
-                  content: { type: "string" },
-                  x: { type: "number" },
-                  y: { type: "number" },
-                  width: { type: "number" },
-                  height: { type: "number" },
-                  rotation: { type: "number" },
-                  zIndex: { type: "number" },
-                  focusWeight: { type: "number" },
-                  layoutRole: { type: "string", enum: ALLOWED_ROLES },
-                  meta: {
-                    type: "object",
-                    description:
-                      "Type-specific fields (e.g. weather → {location,condition,high,low}; metric → {label,delta,up}; document → {title}). See item catalog.",
-                    additionalProperties: true,
-                  },
-                },
-                required: [
-                  "id",
-                  "type",
-                  "content",
-                  "x",
-                  "y",
-                  "width",
-                  "height",
-                  "rotation",
-                  "zIndex",
-                  "focusWeight",
-                  "layoutRole",
-                ],
-                additionalProperties: true,
-              },
+              items: buildFrameSchema(),
             },
+
           },
           required: ["theme", "intent", "frames"],
           additionalProperties: false,
