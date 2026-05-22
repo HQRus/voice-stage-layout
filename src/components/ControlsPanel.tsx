@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Check, Copy } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ChevronLeft, ChevronRight, Check, Copy, Sparkles } from "lucide-react";
 import type { LayoutIntent } from "@/lib/layoutEngine";
 import { scenarios } from "@/lib/scenarios";
 import { STAGE_PROMPT } from "@/lib/stagePrompt";
+import { generateLayoutFromData } from "@/lib/generateLayout.functions";
 
 
 export type PanelMode = "agent" | "manual";
