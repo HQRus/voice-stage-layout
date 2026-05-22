@@ -211,13 +211,14 @@ function fallbackLayoutFromData(input: string, viewport: { width: number; height
   };
 }
 
-function sanitizeFrames(frames: any[], viewport: { width: number; height: number }) {
-  return frames.map((f: any, i: number) => {
+function sanitizeFrames(frames: unknown[], viewport: { width: number; height: number }) {
+  return frames.map((frame, i: number) => {
+    const f = isRecord(frame) ? frame : {};
     const width = clamp(Number(f.width ?? 220), 80, viewport.width);
     const height = clamp(Number(f.height ?? 160), 72, viewport.height);
     return {
       id: String(f.id ?? `ai-${i}`),
-      type: ALLOWED_TYPES.includes(f.type) ? f.type : "document",
+      type: typeof f.type === "string" && ALLOWED_TYPES.includes(f.type) ? f.type : "document",
       content: String(f.content ?? ""),
       x: clamp(Number(f.x ?? 0), 0, Math.max(0, viewport.width - width)),
       y: clamp(Number(f.y ?? 0), 0, Math.max(0, viewport.height - height)),
@@ -226,7 +227,10 @@ function sanitizeFrames(frames: any[], viewport: { width: number; height: number
       rotation: clamp(Number(f.rotation ?? 0), -12, 12),
       zIndex: Number(f.zIndex ?? i + 1),
       focusWeight: clamp(Number(f.focusWeight ?? 0.5), 0, 1),
-      layoutRole: ALLOWED_ROLES.includes(f.layoutRole) ? f.layoutRole : "supporting",
+      layoutRole:
+        typeof f.layoutRole === "string" && ALLOWED_ROLES.includes(f.layoutRole)
+          ? f.layoutRole
+          : "supporting",
       meta: f.meta && typeof f.meta === "object" ? f.meta : undefined,
     };
   });
