@@ -43,6 +43,10 @@ const ALLOWED_TYPES = [
 const ALLOWED_ROLES = ["hero", "supporting", "equal", "background", "document"];
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+const getPath = (value: unknown, path: string[]) =>
+  path.reduce<unknown>((current, key) => (isRecord(current) ? current[key] : undefined), value);
 
 function coerceInputText(input: string) {
   const trimmed = input.trim();
@@ -53,23 +57,29 @@ function coerceInputText(input: string) {
     try {
       const unwrapped = JSON.parse(trimmed);
       if (typeof unwrapped === "string") return unwrapped.trim();
-    } catch {}
+    } catch {
+      return trimmed;
+    }
   }
   return trimmed;
 }
 
-function tryParseLooseData(input: string): any | null {
+function tryParseLooseData(input: string): unknown | null {
   const text = coerceInputText(input);
   try {
     return JSON.parse(text);
-  } catch {}
+  } catch {
+    // Try extracting an object from surrounding pasted text below.
+  }
 
   const firstObject = text.indexOf("{");
   const lastObject = text.lastIndexOf("}");
   if (firstObject !== -1 && lastObject > firstObject) {
     try {
       return JSON.parse(text.slice(firstObject, lastObject + 1));
-    } catch {}
+    } catch {
+      return null;
+    }
   }
   return null;
 }
