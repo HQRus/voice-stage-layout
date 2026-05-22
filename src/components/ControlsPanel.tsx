@@ -279,10 +279,36 @@ export function ControlsPanel(p: Props) {
           </>
         )}
 
+        <Section title="AI design prompt">
+          <div className="text-[11px] text-muted-foreground mb-2 leading-snug">
+            The natural-language brief to hand an AI so its generated layouts feel native to the Stage.
+          </div>
+          <Grid>
+            <Btn onClick={() => setPromptOpen((v) => !v)}>
+              {promptOpen ? "Hide prompt" : "View prompt"}
+            </Btn>
+            <button
+              onClick={copyPrompt}
+              className="py-2 rounded-xl bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition flex items-center justify-center gap-1.5"
+            >
+              {promptCopied ? <><Check className="w-3.5 h-3.5" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+            </button>
+          </Grid>
+          {promptOpen && (
+            <textarea
+              readOnly
+              value={STAGE_PROMPT}
+              onFocus={(e) => e.currentTarget.select()}
+              className="mt-2 w-full h-64 p-2.5 rounded-lg border border-border bg-background text-[11px] leading-relaxed text-foreground/80 focus:outline-none focus:ring-2 focus:ring-accent/40"
+            />
+          )}
+        </Section>
+
         <Section title="Modes">
           <Toggle label="Debug outlines" value={p.debug} onChange={p.onDebug} />
           <Toggle label="Equal spacing" value={p.equalSpacing} onChange={p.onEqualSpacing} />
         </Section>
+
 
         <Section title="Geometry">
           <Slider label="Overlap" value={p.overlapAmount} min={0} max={200} unit="px" onChange={p.onOverlapAmount} />
