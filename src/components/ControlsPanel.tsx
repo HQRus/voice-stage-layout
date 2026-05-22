@@ -230,6 +230,44 @@ export function ControlsPanel(p: Props) {
                 </div>
               )}
             </Section>
+
+            <Section title="Generate from data">
+              <div className="text-[11px] text-muted-foreground mb-2 leading-snug">
+                Paste raw data (JSON, a list, notes) and the AI will compose a Stage layout for it using the design prompt.
+              </div>
+              <button
+                onClick={() => setGenOpen((v) => !v)}
+                className="w-full py-2 rounded-xl border border-border text-xs text-muted-foreground hover:bg-muted transition"
+              >
+                {genOpen ? "Hide" : "Open generator"}
+              </button>
+              {genOpen && (
+                <div className="mt-2 space-y-2">
+                  <textarea
+                    value={genInput}
+                    onChange={(e) => setGenInput(e.target.value)}
+                    placeholder={'e.g.\n{ "city": "Lisbon", "temp": 24, "condition": "Sunny", "hours": [...] }\n\nor a recipe, a list of products, a chat log...'}
+                    className="w-full h-36 p-2 rounded-lg border border-border bg-background text-[11px] font-mono text-foreground/80 focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  />
+                  <button
+                    onClick={runGenerate}
+                    disabled={genLoading || !genInput.trim()}
+                    className="w-full py-2 rounded-xl bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {genLoading ? "Generating…" : "Generate layout"}
+                  </button>
+                  {genError && (
+                    <div className="text-[11px] text-destructive leading-snug">{genError}</div>
+                  )}
+                  {genTheme && !genError && (
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                      Theme: <span className="text-foreground/80 normal-case tracking-normal">{genTheme}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Section>
           </>
         ) : (
           <>
