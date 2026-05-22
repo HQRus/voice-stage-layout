@@ -772,10 +772,15 @@ ${sourceData}`;
       const fallback = fallbackLayoutFromData(data.data, data.viewport);
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
+    const composedFrames = repairLayoutComposition(
+      safeFrames,
+      data.viewport,
+      String(parsedRecord.intent ?? "auto"),
+    );
 
     return {
       theme: String(parsedRecord.theme ?? ""),
       intent: String(parsedRecord.intent ?? "auto"),
-      frames: safeFrames,
+      frames: composedFrames,
     };
   });
