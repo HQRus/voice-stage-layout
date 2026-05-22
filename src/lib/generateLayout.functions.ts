@@ -338,24 +338,16 @@ ${sourceData}`;
       parsed = extractJSON(argStr);
     } catch (e) {
       console.error("AI returned unparseable output. finish_reason=", finishReason, "raw=", argStr.slice(0, 1000));
-      throw new Error("AI did not return valid JSON");
+      const fallback = fallbackLayoutFromData(data.data, data.viewport);
+      return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
 
     const frames = Array.isArray(parsed?.frames) ? parsed.frames : [];
-    const safeFrames = frames.map((f: any, i: number) => ({
-      id: String(f.id ?? `ai-${i}`),
-      type: ALLOWED_TYPES.includes(f.type) ? f.type : "text",
-      content: String(f.content ?? ""),
-      x: Number(f.x ?? 0),
-      y: Number(f.y ?? 0),
-      width: Number(f.width ?? 200),
-      height: Number(f.height ?? 200),
-      rotation: Number(f.rotation ?? 0),
-      zIndex: Number(f.zIndex ?? i + 1),
-      focusWeight: Number(f.focusWeight ?? 0.5),
-      layoutRole: ALLOWED_ROLES.includes(f.layoutRole) ? f.layoutRole : "supporting",
-      meta: f.meta && typeof f.meta === "object" ? f.meta : undefined,
-    }));
+    const safeFrames = sanitizeFrames(frames, data.viewport);
+    if (safeFrames.length === 0) {
+      const fallback = fallbackLayoutFromData(data.data, data.viewport);
+      return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
+    }
 
     return {
       theme: String(parsed?.theme ?? ""),
