@@ -48,6 +48,52 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getPath = (value: unknown, path: string[]) =>
   path.reduce<unknown>((current, key) => (isRecord(current) ? current[key] : undefined), value);
 
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+type JsonRecord = { [key: string]: JsonValue };
+
+export type GeneratedLayoutFrame = {
+  id: string;
+  type: string;
+  content: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  zIndex: number;
+  focusWeight: number;
+  layoutRole: string;
+  meta: JsonRecord;
+};
+
+export type GeneratedLayoutResult = {
+  theme: string;
+  intent: string;
+  frames: GeneratedLayoutFrame[];
+};
+
+function toJsonValue(value: unknown): JsonValue | undefined {
+  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return Number.isNaN(value) ? undefined : value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(toJsonValue).filter((entry): entry is JsonValue => entry !== undefined);
+  }
+  if (isRecord(value)) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, entry]) => [key, toJsonValue(entry)] as const)
+        .filter((entry): entry is readonly [string, JsonValue] => entry[1] !== undefined),
+    );
+  }
+  return undefined;
+}
+
+function toJsonRecord(value: unknown): JsonRecord {
+  const json = toJsonValue(value);
+  return json && typeof json === "object" && !Array.isArray(json) ? json : {};
+}
+
 function coerceInputText(input: string) {
   const trimmed = input.trim();
   if (
@@ -100,7 +146,7 @@ function deriveTitleFromText(text: string, fallback: string) {
   return title.slice(0, 80);
 }
 
-function repairMetaForType(type: string, content: string, meta: Record<string, unknown>, index: number) {
+function repairMetaForType(type: string, content: string, meta: JsonRecord, index: number): JsonRecord {
   const repaired = { ...meta };
   if (type === "document" && !String(repaired.title ?? "").trim()) {
     repaired.title = deriveTitleFromText(content, `Document ${index + 1}`);
