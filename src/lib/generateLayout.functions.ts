@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { STAGE_PROMPT } from "./stagePrompt";
+import { ITEM_CATALOG } from "./itemCatalog";
 
 const ALLOWED_TYPES = [
   "image","video","text","document","logo","quote",
@@ -37,13 +38,15 @@ export const generateLayoutFromData = createServerFn({ method: "POST" })
 
     const systemPrompt = `${basePrompt}
 
+${ITEM_CATALOG}
+
 The stage viewport is ${width}px wide by ${height}px tall. All frames MUST fit
 inside it (x >= 0, y >= 0, x+width <= ${width}, y+height <= ${height}).
-Aim for 3-9 frames unless the theme demands more. Pick frame types that match
-the content (text, quote, image, metric, chart, weather, product, etc.).
+Aim for 3-9 frames unless the theme demands more.
 
 Always respond by calling the compose_stage_layout tool with the chosen theme,
-intent, and frames. Never reply with plain text.`;
+intent, and frames. Never reply with plain text. Never use type "text" when a
+more specific type (weather, metric, document, chart, etc.) fits the data.`;
 
     const userPrompt = `Compose a Stage layout for the following data. First decide the theme, then lay it out.
 
