@@ -10,6 +10,16 @@ interface Props {
   shadowAmount?: number; // 0–100
 }
 
+function deriveDisplayTitle(content: string, fallback: string) {
+  const first = content
+    .replace(/^#+\s*/gm, "")
+    .split(/[\n.]/)
+    .map((part) => part.trim())
+    .find(Boolean);
+  if (!first) return fallback;
+  return (first.split(/[:—-]/)[0]?.trim() || first).slice(0, 80);
+}
+
 // Renders a single positioned item. Dumb on purpose so the same renderer
 // works for rule-based or AI-driven (JSON) layouts.
 export function CanvasItem({ item, debug, viewport, cornerRadius = 16, shadowAmount = 30 }: Props) {
@@ -133,18 +143,20 @@ function ItemContent({ item, cornerRadius, boxShadow }: { item: PositionedItem; 
       );
     }
 
-    case "document":
+    case "document": {
+      const title = String(meta.title ?? "").trim() || deriveDisplayTitle(item.content, "Document");
       return (
         <div className={`w-full h-full ${shadow} bg-card overflow-hidden flex flex-col`} style={radiusStyle}>
           <div className="px-8 pt-7 pb-4 border-b border-border/60">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Document</div>
-            <h3 className="font-display font-bold text-3xl text-foreground mt-1 tracking-tight">{String(meta.title ?? "Untitled")}</h3>
+            <h3 className="font-display font-bold text-3xl text-foreground mt-1 tracking-tight">{title}</h3>
           </div>
           <div className="px-8 py-6 overflow-y-auto text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap font-display">
             {item.content}
           </div>
         </div>
       );
+    }
 
     case "logo": {
       const color = (meta.color as string | undefined) ?? "#111";

@@ -48,6 +48,52 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getPath = (value: unknown, path: string[]) =>
   path.reduce<unknown>((current, key) => (isRecord(current) ? current[key] : undefined), value);
 
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+type JsonRecord = { [key: string]: JsonValue };
+
+export type GeneratedLayoutFrame = {
+  id: string;
+  type: string;
+  content: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  zIndex: number;
+  focusWeight: number;
+  layoutRole: string;
+  meta: JsonRecord;
+};
+
+export type GeneratedLayoutResult = {
+  theme: string;
+  intent: string;
+  frames: GeneratedLayoutFrame[];
+};
+
+function toJsonValue(value: unknown): JsonValue | undefined {
+  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return Number.isNaN(value) ? undefined : value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(toJsonValue).filter((entry): entry is JsonValue => entry !== undefined);
+  }
+  if (isRecord(value)) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, entry]) => [key, toJsonValue(entry)] as const)
+        .filter((entry): entry is readonly [string, JsonValue] => entry[1] !== undefined),
+    );
+  }
+  return undefined;
+}
+
+function toJsonRecord(value: unknown): JsonRecord {
+  const json = toJsonValue(value);
+  return json && typeof json === "object" && !Array.isArray(json) ? json : {};
+}
+
 function coerceInputText(input: string) {
   const trimmed = input.trim();
   if (
@@ -86,6 +132,36 @@ function tryParseLooseData(input: string): unknown | null {
 
 function summarizeRawInput(input: string) {
   return coerceInputText(input).replace(/\s+/g, " ").slice(0, 240);
+}
+
+function deriveTitleFromText(text: string, fallback: string) {
+  const firstLine = text
+    .replace(/^#+\s*/gm, "")
+    .split(/[\n.]/)
+    .map((part) => part.trim())
+    .find(Boolean);
+  if (!firstLine) return fallback;
+  const colonTitle = firstLine.split(/[:—-]/)[0]?.trim();
+  const title = colonTitle && colonTitle.length >= 3 ? colonTitle : firstLine;
+  return title.slice(0, 80);
+}
+
+function repairMetaForType(type: string, content: string, meta: JsonRecord, index: number): JsonRecord {
+  const repaired = { ...meta };
+  if (type === "document" && !String(repaired.title ?? "").trim()) {
+    repaired.title = deriveTitleFromText(content, `Document ${index + 1}`);
+  }
+  if (type === "concept" && !String(repaired.title ?? "").trim()) {
+    repaired.title = deriveTitleFromText(content, `Concept ${index + 1}`);
+  }
+  if (type === "metric" && !String(repaired.label ?? "").trim()) {
+    repaired.label = "Metric";
+  }
+  if (type === "weather") {
+    if (!String(repaired.location ?? "").trim()) repaired.location = "Weather";
+    if (!String(repaired.condition ?? "").trim()) repaired.condition = content || "Current conditions";
+  }
+  return repaired;
 }
 
 function fallbackLayoutFromData(input: string, viewport: { width: number; height: number }) {
@@ -216,12 +292,16 @@ function fallbackLayoutFromData(input: string, viewport: { width: number; height
 function sanitizeFrames(frames: unknown[], viewport: { width: number; height: number }) {
   return frames.map((frame, i: number) => {
     const f = isRecord(frame) ? frame : {};
+    const type = typeof f.type === "string" && ALLOWED_TYPES.includes(f.type) ? f.type : "document";
+    const content = String(f.content ?? "");
+    const rawMeta = toJsonRecord(f.meta);
+    const meta = repairMetaForType(type, content, rawMeta, i);
     const width = clamp(Number(f.width ?? 220), 80, viewport.width);
     const height = clamp(Number(f.height ?? 160), 72, viewport.height);
     return {
       id: String(f.id ?? `ai-${i}`),
-      type: typeof f.type === "string" && ALLOWED_TYPES.includes(f.type) ? f.type : "document",
-      content: String(f.content ?? ""),
+      type,
+      content,
       x: clamp(Number(f.x ?? 0), 0, Math.max(0, viewport.width - width)),
       y: clamp(Number(f.y ?? 0), 0, Math.max(0, viewport.height - height)),
       width,
@@ -233,7 +313,7 @@ function sanitizeFrames(frames: unknown[], viewport: { width: number; height: nu
         typeof f.layoutRole === "string" && ALLOWED_ROLES.includes(f.layoutRole)
           ? f.layoutRole
           : "supporting",
-      meta: f.meta && typeof f.meta === "object" ? f.meta : undefined,
+      meta,
     };
   });
 }

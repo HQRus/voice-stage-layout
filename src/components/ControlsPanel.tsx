@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Check, Copy, Sparkles } from "lucide-react";
 import type { LayoutIntent } from "@/lib/layoutEngine";
 import { scenarios } from "@/lib/scenarios";
 import { STAGE_PROMPT } from "@/lib/stagePrompt";
-import { generateLayoutFromData } from "@/lib/generateLayout.functions";
+import { generateLayoutFromData, type GeneratedLayoutResult } from "@/lib/generateLayout.functions";
 
 
 export type PanelMode = "agent" | "manual";
@@ -112,7 +112,7 @@ export function ControlsPanel(p: Props) {
       const vh = typeof window !== "undefined" ? Math.max(600, window.innerHeight - 40) : 720;
       const result = await generateLayout({
         data: { data: genInput, viewport: { width: vw, height: vh }, prompt: promptText },
-      });
+      }) as GeneratedLayoutResult;
       setGenTheme(result.theme || null);
       p.onApplyJson(JSON.stringify(result.frames));
     } catch (e: any) {
