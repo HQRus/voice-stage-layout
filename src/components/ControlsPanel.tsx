@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Copy } from "lucide-react";
 import type { LayoutIntent } from "@/lib/layoutEngine";
 import { scenarios } from "@/lib/scenarios";
+import { STAGE_PROMPT } from "@/lib/stagePrompt";
+
 
 export type PanelMode = "agent" | "manual";
 
