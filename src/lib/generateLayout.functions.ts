@@ -87,6 +87,11 @@ ${data.data}`;
                   zIndex: { type: "number" },
                   focusWeight: { type: "number" },
                   layoutRole: { type: "string", enum: ALLOWED_ROLES },
+                  meta: {
+                    type: "object",
+                    description: "Type-specific fields (e.g. weather → {location,condition,high,low}; metric → {label,delta,up}; document → {title}). See item catalog.",
+                    additionalProperties: true,
+                  },
                 },
                 required: ["id","type","content","x","y","width","height","rotation","zIndex","focusWeight","layoutRole"],
                 additionalProperties: true,
