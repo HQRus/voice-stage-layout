@@ -85,6 +85,14 @@ export function ControlsPanel(p: Props) {
   const [jsonText, setJsonText] = useState("");
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptCopied, setPromptCopied] = useState(false);
+  const [promptText, setPromptText] = useState<string>(() => {
+    if (typeof window === "undefined") return STAGE_PROMPT;
+    return window.localStorage.getItem("stagePrompt.custom") ?? STAGE_PROMPT;
+  });
+  const [promptSaved, setPromptSaved] = useState(false);
+  const promptDirty = promptText !== (typeof window !== "undefined"
+    ? (window.localStorage.getItem("stagePrompt.custom") ?? STAGE_PROMPT)
+    : STAGE_PROMPT);
 
   // AI generate-from-data state
   const generateLayout = useServerFn(generateLayoutFromData);
@@ -103,7 +111,7 @@ export function ControlsPanel(p: Props) {
       const vw = typeof window !== "undefined" ? Math.max(800, window.innerWidth - 360) : 1200;
       const vh = typeof window !== "undefined" ? Math.max(600, window.innerHeight - 40) : 720;
       const result = await generateLayout({
-        data: { data: genInput, viewport: { width: vw, height: vh } },
+        data: { data: genInput, viewport: { width: vw, height: vh }, prompt: promptText },
       });
       setGenTheme(result.theme || null);
       p.onApplyJson(JSON.stringify(result.frames));
@@ -116,10 +124,25 @@ export function ControlsPanel(p: Props) {
 
   const copyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(STAGE_PROMPT);
+      await navigator.clipboard.writeText(promptText);
       setPromptCopied(true);
       setTimeout(() => setPromptCopied(false), 1600);
     } catch {}
+  };
+
+  const savePrompt = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("stagePrompt.custom", promptText);
+    }
+    setPromptSaved(true);
+    setTimeout(() => setPromptSaved(false), 1600);
+  };
+
+  const resetPrompt = () => {
+    setPromptText(STAGE_PROMPT);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("stagePrompt.custom");
+    }
   };
 
 
@@ -349,11 +372,11 @@ export function ControlsPanel(p: Props) {
 
         <Section title="AI design prompt">
           <div className="text-[11px] text-muted-foreground mb-2 leading-snug">
-            The natural-language brief to hand an AI so its generated layouts feel native to the Stage.
+            Edit the natural-language brief used when generating layouts from data.
           </div>
           <Grid>
             <Btn onClick={() => setPromptOpen((v) => !v)}>
-              {promptOpen ? "Hide prompt" : "View prompt"}
+              {promptOpen ? "Hide prompt" : "Edit prompt"}
             </Btn>
             <button
               onClick={copyPrompt}
@@ -363,12 +386,26 @@ export function ControlsPanel(p: Props) {
             </button>
           </Grid>
           {promptOpen && (
-            <textarea
-              readOnly
-              value={STAGE_PROMPT}
-              onFocus={(e) => e.currentTarget.select()}
-              className="mt-2 w-full h-64 p-2.5 rounded-lg border border-border bg-background text-[11px] leading-relaxed text-foreground/80 focus:outline-none focus:ring-2 focus:ring-accent/40"
-            />
+            <div className="mt-2 space-y-2">
+              <textarea
+                value={promptText}
+                onChange={(e) => setPromptText(e.target.value)}
+                className="w-full h-64 p-2.5 rounded-lg border border-border bg-background text-[11px] leading-relaxed text-foreground/80 focus:outline-none focus:ring-2 focus:ring-accent/40"
+              />
+              <Grid>
+                <button
+                  onClick={savePrompt}
+                  disabled={!promptDirty && !promptSaved}
+                  className="py-2 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90 transition disabled:opacity-40"
+                >
+                  {promptSaved ? "Saved ✓" : promptDirty ? "Save prompt" : "Saved"}
+                </button>
+                <Btn onClick={resetPrompt}>Reset to default</Btn>
+              </Grid>
+              <div className="text-[10px] text-muted-foreground">
+                Saved locally in this browser and used for "Generate from data".
+              </div>
+            </div>
           )}
         </Section>
 
