@@ -14,6 +14,7 @@ export type GenerateLayoutInput = {
   data: string;
   viewport: { width: number; height: number };
   model?: string;
+  prompt?: string;
 };
 
 export const generateLayoutFromData = createServerFn({ method: "POST" })
@@ -32,8 +33,9 @@ export const generateLayoutFromData = createServerFn({ method: "POST" })
 
     const { width, height } = data.viewport;
     const model = data.model || "google/gemini-2.5-flash";
+    const basePrompt = (data.prompt && data.prompt.trim()) ? data.prompt : STAGE_PROMPT;
 
-    const systemPrompt = `${STAGE_PROMPT}
+    const systemPrompt = `${basePrompt}
 
 The stage viewport is ${width}px wide by ${height}px tall. All frames MUST fit
 inside it (x >= 0, y >= 0, x+width <= ${width}, y+height <= ${height}).
