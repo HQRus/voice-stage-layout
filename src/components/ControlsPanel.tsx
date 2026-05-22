@@ -86,6 +86,34 @@ export function ControlsPanel(p: Props) {
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptCopied, setPromptCopied] = useState(false);
 
+  // AI generate-from-data state
+  const generateLayout = useServerFn(generateLayoutFromData);
+  const [genOpen, setGenOpen] = useState(false);
+  const [genInput, setGenInput] = useState("");
+  const [genLoading, setGenLoading] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+  const [genTheme, setGenTheme] = useState<string | null>(null);
+
+  const runGenerate = async () => {
+    if (!genInput.trim() || genLoading) return;
+    setGenLoading(true);
+    setGenError(null);
+    setGenTheme(null);
+    try {
+      const vw = typeof window !== "undefined" ? Math.max(800, window.innerWidth - 360) : 1200;
+      const vh = typeof window !== "undefined" ? Math.max(600, window.innerHeight - 40) : 720;
+      const result = await generateLayout({
+        data: { data: genInput, viewport: { width: vw, height: vh } },
+      });
+      setGenTheme(result.theme || null);
+      p.onApplyJson(JSON.stringify(result.frames));
+    } catch (e: any) {
+      setGenError(e?.message || "Failed to generate layout");
+    } finally {
+      setGenLoading(false);
+    }
+  };
+
   const copyPrompt = async () => {
     try {
       await navigator.clipboard.writeText(STAGE_PROMPT);
