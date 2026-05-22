@@ -85,6 +85,14 @@ export function ControlsPanel(p: Props) {
   const [jsonText, setJsonText] = useState("");
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptCopied, setPromptCopied] = useState(false);
+  const [promptText, setPromptText] = useState<string>(() => {
+    if (typeof window === "undefined") return STAGE_PROMPT;
+    return window.localStorage.getItem("stagePrompt.custom") ?? STAGE_PROMPT;
+  });
+  const [promptSaved, setPromptSaved] = useState(false);
+  const promptDirty = promptText !== (typeof window !== "undefined"
+    ? (window.localStorage.getItem("stagePrompt.custom") ?? STAGE_PROMPT)
+    : STAGE_PROMPT);
 
   // AI generate-from-data state
   const generateLayout = useServerFn(generateLayoutFromData);
@@ -103,7 +111,7 @@ export function ControlsPanel(p: Props) {
       const vw = typeof window !== "undefined" ? Math.max(800, window.innerWidth - 360) : 1200;
       const vh = typeof window !== "undefined" ? Math.max(600, window.innerHeight - 40) : 720;
       const result = await generateLayout({
-        data: { data: genInput, viewport: { width: vw, height: vh } },
+        data: { data: genInput, viewport: { width: vw, height: vh }, prompt: promptText },
       });
       setGenTheme(result.theme || null);
       p.onApplyJson(JSON.stringify(result.frames));
@@ -116,10 +124,25 @@ export function ControlsPanel(p: Props) {
 
   const copyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(STAGE_PROMPT);
+      await navigator.clipboard.writeText(promptText);
       setPromptCopied(true);
       setTimeout(() => setPromptCopied(false), 1600);
     } catch {}
+  };
+
+  const savePrompt = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("stagePrompt.custom", promptText);
+    }
+    setPromptSaved(true);
+    setTimeout(() => setPromptSaved(false), 1600);
+  };
+
+  const resetPrompt = () => {
+    setPromptText(STAGE_PROMPT);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("stagePrompt.custom");
+    }
   };
 
 
