@@ -90,6 +90,7 @@ function summarizeRawInput(input: string) {
 
 function fallbackLayoutFromData(input: string, viewport: { width: number; height: number }) {
   const parsed = tryParseLooseData(input);
+  const dataRecord = isRecord(parsed) ? parsed : {};
   const w = viewport.width;
   const h = viewport.height;
   const pad = Math.max(28, Math.min(72, w * 0.055));
@@ -99,29 +100,29 @@ function fallbackLayoutFromData(input: string, viewport: { width: number; height
   const heroY = Math.max(pad, (h - heroH) / 2);
   const sideX = heroX + heroW + Math.max(24, w * 0.035);
   const sideW = Math.max(180, w - sideX - pad);
-  const location = String(parsed?.location ?? parsed?.city ?? parsed?.place ?? "Generated layout");
-  const forecast = Array.isArray(parsed?.forecast) ? parsed.forecast.slice(0, 6) : [];
+  const location = String(dataRecord.location ?? dataRecord.city ?? dataRecord.place ?? "Generated layout");
+  const forecast = Array.isArray(dataRecord.forecast) ? dataRecord.forecast.slice(0, 6) : [];
 
   if (forecast.length > 0) {
     const first = forecast[0] ?? {};
     const temp =
-      first?.temp_max?.celsius ??
-      first?.temperature?.celsius ??
-      first?.temp?.celsius ??
-      first?.temp_max ??
-      first?.temperature ??
+      getPath(first, ["temp_max", "celsius"]) ??
+      getPath(first, ["temperature", "celsius"]) ??
+      getPath(first, ["temp", "celsius"]) ??
+      getPath(first, ["temp_max"]) ??
+      getPath(first, ["temperature"]) ??
       "";
     const cardH = Math.max(118, Math.min(160, (h - pad * 2 - 16) / 2));
-    const cards = forecast.slice(1, 5).map((day: any, i: number) => {
+    const cards = forecast.slice(1, 5).map((day, i: number) => {
       const col = i % 2;
       const row = Math.floor(i / 2);
       const maxTemp =
-        day?.temp_max?.celsius ??
-        day?.temperature?.celsius ??
-        day?.temp_max ??
-        day?.temperature ??
+        getPath(day, ["temp_max", "celsius"]) ??
+        getPath(day, ["temperature", "celsius"]) ??
+        getPath(day, ["temp_max"]) ??
+        getPath(day, ["temperature"]) ??
         "";
-      const minTemp = day?.temp_min?.celsius ?? day?.temp_min ?? "";
+      const minTemp = getPath(day, ["temp_min", "celsius"]) ?? getPath(day, ["temp_min"]) ?? "";
       return {
         id: `ai-weather-${i + 1}`,
         type: "weather",
@@ -135,8 +136,8 @@ function fallbackLayoutFromData(input: string, viewport: { width: number; height
         focusWeight: 0.65,
         layoutRole: "supporting",
         meta: {
-          location: String(day?.day_of_week ?? day?.date ?? location),
-          condition: String(day?.condition ?? ""),
+          location: String(getPath(day, ["day_of_week"]) ?? getPath(day, ["date"]) ?? location),
+          condition: String(getPath(day, ["condition"]) ?? ""),
           high: typeof maxTemp === "number" ? maxTemp : undefined,
           low: typeof minTemp === "number" ? minTemp : undefined,
         },
@@ -161,9 +162,12 @@ function fallbackLayoutFromData(input: string, viewport: { width: number; height
           layoutRole: "hero",
           meta: {
             location,
-            condition: String(first?.condition ?? ""),
+            condition: String(getPath(first, ["condition"]) ?? ""),
             high: typeof temp === "number" ? temp : undefined,
-            low: typeof first?.temp_min?.celsius === "number" ? first.temp_min.celsius : undefined,
+            low:
+              typeof getPath(first, ["temp_min", "celsius"]) === "number"
+                ? getPath(first, ["temp_min", "celsius"])
+                : undefined,
           },
         },
         ...cards,
