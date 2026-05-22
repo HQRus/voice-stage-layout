@@ -213,7 +213,7 @@ function repairLayoutComposition(
     equalSpacing: false,
     overlapAmount: 0,
     rotationAmount: 2,
-  }).frames;
+  }).frames.map((frame) => ({ ...frame, meta: toJsonRecord(frame.meta) }));
 }
 
 function fallbackLayoutFromData(input: string, viewport: { width: number; height: number }) {
