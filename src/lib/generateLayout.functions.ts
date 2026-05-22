@@ -191,23 +191,121 @@ function hasOneNoteDocumentStack(frames: GeneratedLayoutFrame[]) {
   return documentCount / frames.length >= 0.75;
 }
 
+function buildItineraryItems(input: string): MediaItem[] | null {
+  const parsed = tryParseLooseData(input);
+  const record = isRecord(parsed) ? parsed : null;
+  const days = Array.isArray(record?.daily_schedule) ? record.daily_schedule : [];
+  if (!record || days.length === 0) return null;
+
+  const destination = String(record.destination ?? "Itinerary");
+  const focus = String(record.curation_focus ?? record.focus ?? "");
+  const items: MediaItem[] = [
+    {
+      id: "ai-itinerary-hero",
+      type: "document",
+      content: focus || summarizeRawInput(input),
+      meta: { title: destination },
+      focusWeight: 1,
+    },
+    {
+      id: "ai-itinerary-days",
+      type: "metric",
+      content: String(record.itinerary_days ?? days.length),
+      meta: { label: "itinerary days" },
+      focusWeight: 0.7,
+    },
+  ];
+
+  days.slice(0, 3).forEach((day, index) => {
+    const dayRecord = isRecord(day) ? day : {};
+    items.push({
+      id: `ai-itinerary-day-${index + 1}`,
+      type: "calendarSlot",
+      content: `Day ${String(dayRecord.day ?? index + 1)}`,
+      meta: {
+        day: `Day ${String(dayRecord.day ?? index + 1)}`,
+        duration: "Full day",
+        status: "booked",
+        title: String(dayRecord.focus ?? "Design route"),
+      },
+      focusWeight: 0.65,
+    });
+  });
+
+  const siteSlots = ["morning", "afternoon", "evening"];
+  const sites = days.flatMap((day) => {
+    const dayRecord = isRecord(day) ? day : {};
+    return siteSlots.map((slot) => getPath(dayRecord, [slot])).filter(isRecord);
+  });
+  sites.slice(0, 3).forEach((site, index) => {
+    const place = String(site.site ?? site.place ?? `Site ${index + 1}`);
+    items.push({
+      id: `ai-itinerary-site-${index + 1}`,
+      type: "map",
+      content: String(site.architectural_significance ?? site.note ?? place),
+      meta: { place },
+      focusWeight: 0.6,
+    });
+  });
+
+  const tips = Array.isArray(record.practical_tips)
+    ? record.practical_tips.slice(0, 5).map((tip) => ({ text: String(tip), done: false }))
+    : [];
+  if (tips.length > 0) {
+    items.push({
+      id: "ai-itinerary-tips",
+      type: "checklist",
+      content: "Practical notes",
+      meta: { items: tips },
+      focusWeight: 0.55,
+    });
+  }
+
+  return items.slice(0, 9);
+}
+
+function diversifyDocumentFrames(frames: GeneratedLayoutFrame[]): MediaItem[] {
+  return frames.map<MediaItem>((frame, index) => {
+    const title = String(frame.meta.title ?? "").trim() || deriveTitleFromText(frame.content, `Item ${index + 1}`);
+    if (index === 0) return { ...frame, type: "document", meta: { ...frame.meta, title } as Record<string, unknown> };
+    if (index % 4 === 1) return { ...frame, type: "concept", meta: { ...frame.meta, title } as Record<string, unknown> };
+    if (index % 4 === 2) return { ...frame, type: "quote", content: frame.content.slice(0, 180), meta: frame.meta };
+    if (index % 4 === 3) {
+      const lines = frame.content.split(/[\n.;]/).map((part) => part.trim()).filter(Boolean).slice(0, 4);
+      return {
+        ...frame,
+        type: "checklist",
+        content: title,
+        meta: { items: lines.map((text) => ({ text, done: false })) },
+      };
+    }
+    return { ...frame, type: "metric", content: String(index + 1), meta: { label: title } };
+  });
+}
+
 function repairLayoutComposition(
   frames: GeneratedLayoutFrame[],
   viewport: { width: number; height: number },
   intent: string,
+  sourceData: string,
 ) {
-  if (!hasCollapsedPlacement(frames, viewport) && !hasOneNoteDocumentStack(frames)) {
+  const collapsed = hasCollapsedPlacement(frames, viewport);
+  const oneNoteDocuments = hasOneNoteDocumentStack(frames);
+  if (!collapsed && !oneNoteDocuments) {
     return frames;
   }
 
-  const items = frames.map<MediaItem>((frame) => ({
+  const items = oneNoteDocuments
+    ? buildItineraryItems(sourceData) ?? diversifyDocumentFrames(frames)
+    : frames.map<MediaItem>((frame) => ({
     id: frame.id,
     type: frame.type as MediaItem["type"],
     content: frame.content,
     meta: frame.meta,
     focusWeight: frame.focusWeight,
   }));
-  const layoutIntent = STAGE_INTENTS.includes(intent) ? (intent as LayoutIntent) : "moodboard";
+  const requestedIntent = STAGE_INTENTS.includes(intent) ? (intent as LayoutIntent) : "moodboard";
+  const layoutIntent = requestedIntent === "presentationKit" || requestedIntent === "transcript" ? "moodboard" : requestedIntent;
   return composeDeterministicLayout(items, viewport, {
     intent: layoutIntent,
     equalSpacing: false,
