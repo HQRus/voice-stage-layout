@@ -303,11 +303,18 @@ ${sourceData}`;
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
 
-    const json = await resp.json();
+    let json: any;
+    try {
+      json = await resp.json();
+    } catch (error) {
+      console.error("AI gateway returned non-JSON response", error);
+      const fallback = fallbackLayoutFromData(data.data, data.viewport);
+      return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
+    }
     const choice = json?.choices?.[0];
     const toolCall = choice?.message?.tool_calls?.[0];
-    const rawContent: string = choice?.message?.content ?? "";
-    const argStr: string = toolCall?.function?.arguments ?? rawContent ?? "";
+    const rawContent = choice?.message?.content ?? "";
+    const rawArgs = toolCall?.function?.arguments ?? rawContent ?? "";
 
     const finishReason = choice?.finish_reason;
     if (finishReason === "length") {
@@ -316,8 +323,9 @@ ${sourceData}`;
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
 
-    function extractJSON(raw: string): any {
-      let cleaned = raw
+    function extractJSON(raw: unknown): any {
+      if (raw && typeof raw === "object") return raw;
+      let cleaned = String(raw ?? "")
         .replace(/^```json\s*/im, "")
         .replace(/^```\s*/im, "")
         .replace(/```\s*$/im, "")
@@ -335,9 +343,9 @@ ${sourceData}`;
 
     let parsed: any;
     try {
-      parsed = extractJSON(argStr);
+      parsed = extractJSON(rawArgs);
     } catch (e) {
-      console.error("AI returned unparseable output. finish_reason=", finishReason, "raw=", argStr.slice(0, 1000));
+      console.error("AI returned unparseable output. finish_reason=", finishReason, "raw=", String(rawArgs ?? "").slice(0, 1000));
       const fallback = fallbackLayoutFromData(data.data, data.viewport);
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
