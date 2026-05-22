@@ -400,7 +400,7 @@ ${sourceData}`;
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
 
-    let json: any;
+    let json: unknown;
     try {
       json = await resp.json();
     } catch (error) {
@@ -408,10 +408,15 @@ ${sourceData}`;
       const fallback = fallbackLayoutFromData(data.data, data.viewport);
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
-    const choice = json?.choices?.[0];
-    const toolCall = choice?.message?.tool_calls?.[0];
-    const rawContent = choice?.message?.content ?? "";
-    const rawArgs = toolCall?.function?.arguments ?? rawContent ?? "";
+    const root = isRecord(json) ? json : {};
+    const choices = Array.isArray(root.choices) ? root.choices : [];
+    const choice = isRecord(choices[0]) ? choices[0] : {};
+    const message = isRecord(choice.message) ? choice.message : {};
+    const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : [];
+    const toolCall = isRecord(toolCalls[0]) ? toolCalls[0] : {};
+    const toolFunction = isRecord(toolCall.function) ? toolCall.function : {};
+    const rawContent = message.content ?? "";
+    const rawArgs = toolFunction.arguments ?? rawContent ?? "";
 
     const finishReason = choice?.finish_reason;
     if (finishReason === "length") {
@@ -420,7 +425,7 @@ ${sourceData}`;
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
 
-    function extractJSON(raw: unknown): any {
+    function extractJSON(raw: unknown): unknown {
       if (raw && typeof raw === "object") return raw;
       let cleaned = String(raw ?? "")
         .replace(/^```json\s*/im, "")
@@ -438,7 +443,7 @@ ${sourceData}`;
       return JSON.parse(cleaned);
     }
 
-    let parsed: any;
+    let parsed: unknown;
     try {
       parsed = extractJSON(rawArgs);
     } catch (e) {
