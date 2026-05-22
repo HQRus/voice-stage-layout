@@ -465,6 +465,31 @@ function buildFrameSchema() {
   return { oneOf };
 }
 
+const STAGE_INTENTS = [
+  "auto", "equal", "hero", "editorial", "moodboard", "logos", "document",
+  "presentation", "concepts", "brandBoard", "directions", "mascotSet",
+  "storyboard", "mediaPlayer", "presentationKit", "calendar", "confirmation",
+  "transcript", "reelStack", "adVariants", "editTimeline",
+];
+
+const STAGE_TOOL = {
+  type: "function",
+  function: {
+    name: "compose_stage_layout",
+    description: "Return the composed Stage layout (theme, intent, frames).",
+    parameters: {
+      type: "object",
+      properties: {
+        theme: { type: "string", description: "Short label for the chosen theme." },
+        intent: { type: "string", enum: STAGE_INTENTS },
+        frames: { type: "array", items: buildFrameSchema() },
+      },
+      required: ["theme", "intent", "frames"],
+      additionalProperties: false,
+    },
+  },
+};
+
 export type GenerateLayoutInput = {
 
   data: string;
