@@ -294,7 +294,7 @@ function sanitizeFrames(frames: unknown[], viewport: { width: number; height: nu
     const f = isRecord(frame) ? frame : {};
     const type = typeof f.type === "string" && ALLOWED_TYPES.includes(f.type) ? f.type : "document";
     const content = String(f.content ?? "");
-    const rawMeta = isRecord(f.meta) ? f.meta : {};
+    const rawMeta = toJsonRecord(f.meta);
     const meta = repairMetaForType(type, content, rawMeta, i);
     const width = clamp(Number(f.width ?? 220), 80, viewport.width);
     const height = clamp(Number(f.height ?? 160), 72, viewport.height);
