@@ -874,6 +874,7 @@ ${sourceData}`;
       safeFrames,
       data.viewport,
       String(parsedRecord.intent ?? "auto"),
+      data.data,
     );
 
     return {
