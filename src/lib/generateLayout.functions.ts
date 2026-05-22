@@ -457,7 +457,8 @@ ${sourceData}`;
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
 
-    const frames = Array.isArray(parsed?.frames) ? parsed.frames : [];
+    const parsedRecord = isRecord(parsed) ? parsed : {};
+    const frames = Array.isArray(parsedRecord.frames) ? parsedRecord.frames : [];
     const safeFrames = sanitizeFrames(frames, data.viewport);
     if (safeFrames.length === 0) {
       const fallback = fallbackLayoutFromData(data.data, data.viewport);
@@ -465,8 +466,8 @@ ${sourceData}`;
     }
 
     return {
-      theme: String(parsed?.theme ?? ""),
-      intent: String(parsed?.intent ?? "auto"),
+      theme: String(parsedRecord.theme ?? ""),
+      intent: String(parsedRecord.intent ?? "auto"),
       frames: safeFrames,
     };
   });
