@@ -11,6 +11,170 @@ const ALLOWED_TYPES = [
 
 const ALLOWED_ROLES = ["hero", "supporting", "equal", "background", "document"];
 
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+function coerceInputText(input: string) {
+  const trimmed = input.trim();
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    try {
+      const unwrapped = JSON.parse(trimmed);
+      if (typeof unwrapped === "string") return unwrapped.trim();
+    } catch {}
+  }
+  return trimmed;
+}
+
+function tryParseLooseData(input: string): any | null {
+  const text = coerceInputText(input);
+  try {
+    return JSON.parse(text);
+  } catch {}
+
+  const firstObject = text.indexOf("{");
+  const lastObject = text.lastIndexOf("}");
+  if (firstObject !== -1 && lastObject > firstObject) {
+    try {
+      return JSON.parse(text.slice(firstObject, lastObject + 1));
+    } catch {}
+  }
+  return null;
+}
+
+function summarizeRawInput(input: string) {
+  return coerceInputText(input)
+    .replace(/\s+/g, " ")
+    .slice(0, 240);
+}
+
+function fallbackLayoutFromData(input: string, viewport: { width: number; height: number }) {
+  const parsed = tryParseLooseData(input);
+  const w = viewport.width;
+  const h = viewport.height;
+  const pad = Math.max(28, Math.min(72, w * 0.055));
+  const heroW = Math.min(420, w * 0.34);
+  const heroH = Math.min(420, h * 0.58);
+  const heroX = pad;
+  const heroY = Math.max(pad, (h - heroH) / 2);
+  const sideX = heroX + heroW + Math.max(24, w * 0.035);
+  const sideW = Math.max(180, w - sideX - pad);
+  const location = String(parsed?.location ?? parsed?.city ?? parsed?.place ?? "Generated layout");
+  const forecast = Array.isArray(parsed?.forecast) ? parsed.forecast.slice(0, 6) : [];
+
+  if (forecast.length > 0) {
+    const first = forecast[0] ?? {};
+    const temp = first?.temp_max?.celsius ?? first?.temperature?.celsius ?? first?.temp?.celsius ?? first?.temp_max ?? first?.temperature ?? "";
+    const cardH = Math.max(118, Math.min(160, (h - pad * 2 - 16) / 2));
+    const cards = forecast.slice(1, 5).map((day: any, i: number) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const maxTemp = day?.temp_max?.celsius ?? day?.temperature?.celsius ?? day?.temp_max ?? day?.temperature ?? "";
+      const minTemp = day?.temp_min?.celsius ?? day?.temp_min ?? "";
+      return {
+        id: `ai-weather-${i + 1}`,
+        type: "weather",
+        content: maxTemp === "" ? String(day?.condition ?? "Weather") : `${maxTemp}°`,
+        x: sideX + col * ((sideW - 18) / 2 + 18),
+        y: pad + row * (cardH + 18),
+        width: (sideW - 18) / 2,
+        height: cardH,
+        rotation: i % 2 === 0 ? -1 : 1,
+        zIndex: i + 2,
+        focusWeight: 0.65,
+        layoutRole: "supporting",
+        meta: {
+          location: String(day?.day_of_week ?? day?.date ?? location),
+          condition: String(day?.condition ?? ""),
+          high: typeof maxTemp === "number" ? maxTemp : undefined,
+          low: typeof minTemp === "number" ? minTemp : undefined,
+        },
+      };
+    });
+
+    return {
+      theme: `${location} weather moment`,
+      intent: "moodboard",
+      frames: [
+        {
+          id: "ai-weather-hero",
+          type: "weather",
+          content: temp === "" ? String(first?.condition ?? "Weather") : `${temp}°`,
+          x: heroX,
+          y: heroY,
+          width: heroW,
+          height: heroH,
+          rotation: -2,
+          zIndex: 10,
+          focusWeight: 1,
+          layoutRole: "hero",
+          meta: {
+            location,
+            condition: String(first?.condition ?? ""),
+            high: typeof temp === "number" ? temp : undefined,
+            low: typeof first?.temp_min?.celsius === "number" ? first.temp_min.celsius : undefined,
+          },
+        },
+        ...cards,
+      ],
+    };
+  }
+
+  return {
+    theme: "Data snapshot",
+    intent: "presentationKit",
+    frames: [
+      {
+        id: "ai-summary",
+        type: "document",
+        content: summarizeRawInput(input),
+        x: pad,
+        y: pad,
+        width: Math.min(520, w - pad * 2),
+        height: Math.min(340, h - pad * 2),
+        rotation: -1,
+        zIndex: 2,
+        focusWeight: 1,
+        layoutRole: "hero",
+        meta: { title: "Generated from pasted data" },
+      },
+      {
+        id: "ai-source-metric",
+        type: "metric",
+        content: `${coerceInputText(input).length}`,
+        x: Math.min(w - pad - 240, pad + 540),
+        y: pad + 40,
+        width: 240,
+        height: 170,
+        rotation: 1.5,
+        zIndex: 3,
+        focusWeight: 0.55,
+        layoutRole: "supporting",
+        meta: { label: "source characters", sub: "AI fallback" },
+      },
+    ],
+  };
+}
+
+function sanitizeFrames(frames: any[], viewport: { width: number; height: number }) {
+  return frames.map((f: any, i: number) => {
+    const width = clamp(Number(f.width ?? 220), 80, viewport.width);
+    const height = clamp(Number(f.height ?? 160), 72, viewport.height);
+    return {
+      id: String(f.id ?? `ai-${i}`),
+      type: ALLOWED_TYPES.includes(f.type) ? f.type : "document",
+      content: String(f.content ?? ""),
+      x: clamp(Number(f.x ?? 0), 0, Math.max(0, viewport.width - width)),
+      y: clamp(Number(f.y ?? 0), 0, Math.max(0, viewport.height - height)),
+      width,
+      height,
+      rotation: clamp(Number(f.rotation ?? 0), -12, 12),
+      zIndex: Number(f.zIndex ?? i + 1),
+      focusWeight: clamp(Number(f.focusWeight ?? 0.5), 0, 1),
+      layoutRole: ALLOWED_ROLES.includes(f.layoutRole) ? f.layoutRole : "supporting",
+      meta: f.meta && typeof f.meta === "object" ? f.meta : undefined,
+    };
+  });
+}
+
 export type GenerateLayoutInput = {
   data: string;
   viewport: { width: number; height: number };
