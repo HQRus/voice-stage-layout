@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { STAGE_PROMPT } from "./stagePrompt";
 import { ITEM_CATALOG } from "./itemCatalog";
+import {
+  generateLayout as composeDeterministicLayout,
+  type LayoutIntent,
+  type MediaItem,
+} from "./layoutEngine";
 
 const ALLOWED_TYPES = [
   "image",
@@ -47,6 +52,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const getPath = (value: unknown, path: string[]) =>
   path.reduce<unknown>((current, key) => (isRecord(current) ? current[key] : undefined), value);
+const toFiniteNumber = (value: unknown, fallback: number) => {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : fallback;
+};
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 type JsonRecord = { [key: string]: JsonValue };
@@ -162,6 +171,147 @@ function repairMetaForType(type: string, content: string, meta: JsonRecord, inde
     if (!String(repaired.condition ?? "").trim()) repaired.condition = content || "Current conditions";
   }
   return repaired;
+}
+
+function hasCollapsedPlacement(frames: GeneratedLayoutFrame[], viewport: { width: number; height: number }) {
+  if (frames.length <= 1) return false;
+  const diagonal = Math.max(1, Math.hypot(viewport.width, viewport.height));
+  const centers = frames.map((frame) => ({
+    x: frame.x + frame.width / 2,
+    y: frame.y + frame.height / 2,
+  }));
+  const spreadX = Math.max(...centers.map((p) => p.x)) - Math.min(...centers.map((p) => p.x));
+  const spreadY = Math.max(...centers.map((p) => p.y)) - Math.min(...centers.map((p) => p.y));
+  return Math.hypot(spreadX, spreadY) < diagonal * 0.08;
+}
+
+function hasOneNoteDocumentStack(frames: GeneratedLayoutFrame[]) {
+  if (frames.length < 4) return false;
+  const documentCount = frames.filter((frame) => frame.type === "document").length;
+  return documentCount / frames.length >= 0.75;
+}
+
+function buildItineraryItems(input: string): MediaItem[] | null {
+  const parsed = tryParseLooseData(input);
+  const record = isRecord(parsed) ? parsed : null;
+  const days = Array.isArray(record?.daily_schedule) ? record.daily_schedule : [];
+  if (!record || days.length === 0) return null;
+
+  const destination = String(record.destination ?? "Itinerary");
+  const focus = String(record.curation_focus ?? record.focus ?? "");
+  const items: MediaItem[] = [
+    {
+      id: "ai-itinerary-hero",
+      type: "document",
+      content: focus || summarizeRawInput(input),
+      meta: { title: destination },
+      focusWeight: 1,
+    },
+    {
+      id: "ai-itinerary-days",
+      type: "metric",
+      content: String(record.itinerary_days ?? days.length),
+      meta: { label: "itinerary days" },
+      focusWeight: 0.7,
+    },
+  ];
+
+  days.slice(0, 3).forEach((day, index) => {
+    const dayRecord = isRecord(day) ? day : {};
+    items.push({
+      id: `ai-itinerary-day-${index + 1}`,
+      type: "calendarSlot",
+      content: `Day ${String(dayRecord.day ?? index + 1)}`,
+      meta: {
+        day: `Day ${String(dayRecord.day ?? index + 1)}`,
+        duration: "Full day",
+        status: "booked",
+        title: String(dayRecord.focus ?? "Design route"),
+      },
+      focusWeight: 0.65,
+    });
+  });
+
+  const siteSlots = ["morning", "afternoon", "evening"];
+  const sites = days.flatMap((day) => {
+    const dayRecord = isRecord(day) ? day : {};
+    return siteSlots.map((slot) => getPath(dayRecord, [slot])).filter(isRecord);
+  });
+  sites.slice(0, 3).forEach((site, index) => {
+    const place = String(site.site ?? site.place ?? `Site ${index + 1}`);
+    items.push({
+      id: `ai-itinerary-site-${index + 1}`,
+      type: "map",
+      content: String(site.architectural_significance ?? site.note ?? place),
+      meta: { place },
+      focusWeight: 0.6,
+    });
+  });
+
+  const tips = Array.isArray(record.practical_tips)
+    ? record.practical_tips.slice(0, 5).map((tip) => ({ text: String(tip), done: false }))
+    : [];
+  if (tips.length > 0) {
+    items.push({
+      id: "ai-itinerary-tips",
+      type: "checklist",
+      content: "Practical notes",
+      meta: { items: tips },
+      focusWeight: 0.55,
+    });
+  }
+
+  return items.slice(0, 9);
+}
+
+function diversifyDocumentFrames(frames: GeneratedLayoutFrame[]): MediaItem[] {
+  return frames.map<MediaItem>((frame, index) => {
+    const title = String(frame.meta.title ?? "").trim() || deriveTitleFromText(frame.content, `Item ${index + 1}`);
+    if (index === 0) return { ...frame, type: "document", meta: { ...frame.meta, title } as Record<string, unknown> };
+    if (index % 4 === 1) return { ...frame, type: "concept", meta: { ...frame.meta, title } as Record<string, unknown> };
+    if (index % 4 === 2) return { ...frame, type: "quote", content: frame.content.slice(0, 180), meta: frame.meta };
+    if (index % 4 === 3) {
+      const lines = frame.content.split(/[\n.;]/).map((part) => part.trim()).filter(Boolean).slice(0, 4);
+      return {
+        ...frame,
+        type: "checklist",
+        content: title,
+        meta: { items: lines.map((text) => ({ text, done: false })) },
+      };
+    }
+    return { ...frame, type: "metric", content: String(index + 1), meta: { label: title } };
+  });
+}
+
+function repairLayoutComposition(
+  frames: GeneratedLayoutFrame[],
+  viewport: { width: number; height: number },
+  intent: string,
+  sourceData: string,
+) {
+  const collapsed = hasCollapsedPlacement(frames, viewport);
+  const oneNoteDocuments = hasOneNoteDocumentStack(frames);
+  if (!collapsed && !oneNoteDocuments) {
+    return frames;
+  }
+
+  const items = oneNoteDocuments
+    ? buildItineraryItems(sourceData) ?? diversifyDocumentFrames(frames)
+    : frames.map<MediaItem>((frame) => ({
+    id: frame.id,
+    type: frame.type as MediaItem["type"],
+    content: frame.content,
+    meta: frame.meta,
+    focusWeight: frame.focusWeight,
+  }));
+  const requestedIntent = STAGE_INTENTS.includes(intent) ? (intent as LayoutIntent) : "moodboard";
+  const layoutIntent = requestedIntent === "presentationKit" || requestedIntent === "transcript" ? "moodboard" : requestedIntent;
+  return composeDeterministicLayout(items, viewport, {
+    intent: layoutIntent,
+    equalSpacing: false,
+    overlapAmount: 0,
+    rotationAmount: 2,
+  }).frames.map((frame) => ({ ...frame, meta: toJsonRecord(frame.meta) }));
 }
 
 function fallbackLayoutFromData(input: string, viewport: { width: number; height: number }) {
@@ -296,19 +446,19 @@ function sanitizeFrames(frames: unknown[], viewport: { width: number; height: nu
     const content = String(f.content ?? "");
     const rawMeta = toJsonRecord(f.meta);
     const meta = repairMetaForType(type, content, rawMeta, i);
-    const width = clamp(Number(f.width ?? 220), 80, viewport.width);
-    const height = clamp(Number(f.height ?? 160), 72, viewport.height);
+    const width = clamp(toFiniteNumber(f.width, 220), 80, viewport.width);
+    const height = clamp(toFiniteNumber(f.height, 160), 72, viewport.height);
     return {
       id: String(f.id ?? `ai-${i}`),
       type,
       content,
-      x: clamp(Number(f.x ?? 0), 0, Math.max(0, viewport.width - width)),
-      y: clamp(Number(f.y ?? 0), 0, Math.max(0, viewport.height - height)),
+      x: clamp(toFiniteNumber(f.x, 0), 0, Math.max(0, viewport.width - width)),
+      y: clamp(toFiniteNumber(f.y, 0), 0, Math.max(0, viewport.height - height)),
       width,
       height,
-      rotation: clamp(Number(f.rotation ?? 0), -12, 12),
-      zIndex: Number(f.zIndex ?? i + 1),
-      focusWeight: clamp(Number(f.focusWeight ?? 0.5), 0, 1),
+      rotation: clamp(toFiniteNumber(f.rotation, 0), -12, 12),
+      zIndex: toFiniteNumber(f.zIndex, i + 1),
+      focusWeight: clamp(toFiniteNumber(f.focusWeight, 0.5), 0, 1),
       layoutRole:
         typeof f.layoutRole === "string" && ALLOWED_ROLES.includes(f.layoutRole)
           ? f.layoutRole
@@ -720,10 +870,16 @@ ${sourceData}`;
       const fallback = fallbackLayoutFromData(data.data, data.viewport);
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
+    const composedFrames = repairLayoutComposition(
+      safeFrames,
+      data.viewport,
+      String(parsedRecord.intent ?? "auto"),
+      data.data,
+    );
 
     return {
       theme: String(parsedRecord.theme ?? ""),
       intent: String(parsedRecord.intent ?? "auto"),
-      frames: safeFrames,
+      frames: composedFrames,
     };
   });
