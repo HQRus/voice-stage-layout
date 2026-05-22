@@ -121,13 +121,39 @@ ${data.data}`;
     }
 
     const json = await resp.json();
-    const toolCall = json?.choices?.[0]?.message?.tool_calls?.[0];
-    const argStr: string = toolCall?.function?.arguments ?? json?.choices?.[0]?.message?.content ?? "";
+    const choice = json?.choices?.[0];
+    const toolCall = choice?.message?.tool_calls?.[0];
+    const rawContent: string = choice?.message?.content ?? "";
+    const argStr: string = toolCall?.function?.arguments ?? rawContent ?? "";
+
+    const finishReason = choice?.finish_reason;
+    if (finishReason === "length") {
+      console.error("AI response truncated (finish_reason=length)");
+      throw new Error("AI response was truncated. Try shorter data or a simpler request.");
+    }
+
+    function extractJSON(raw: string): any {
+      let cleaned = raw
+        .replace(/^```json\s*/im, "")
+        .replace(/^```\s*/im, "")
+        .replace(/```\s*$/im, "")
+        .trim();
+      if (!cleaned) throw new Error("empty");
+      if (!cleaned.startsWith("{") && !cleaned.startsWith("[")) {
+        const objStart = cleaned.indexOf("{");
+        const end = cleaned.lastIndexOf("}");
+        if (objStart !== -1 && end > objStart) {
+          cleaned = cleaned.slice(objStart, end + 1);
+        }
+      }
+      return JSON.parse(cleaned);
+    }
+
     let parsed: any;
     try {
-      parsed = JSON.parse(argStr);
+      parsed = extractJSON(argStr);
     } catch (e) {
-      console.error("AI returned unparseable output:", argStr.slice(0, 500));
+      console.error("AI returned unparseable output. finish_reason=", finishReason, "raw=", argStr.slice(0, 1000));
       throw new Error("AI did not return valid JSON");
     }
 
