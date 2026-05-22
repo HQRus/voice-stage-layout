@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { STAGE_PROMPT } from "./stagePrompt";
 import { ITEM_CATALOG } from "./itemCatalog";
+import {
+  generateLayout as composeDeterministicLayout,
+  type LayoutIntent,
+  type MediaItem,
+} from "./layoutEngine";
 
 const ALLOWED_TYPES = [
   "image",
@@ -47,6 +52,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const getPath = (value: unknown, path: string[]) =>
   path.reduce<unknown>((current, key) => (isRecord(current) ? current[key] : undefined), value);
+const toFiniteNumber = (value: unknown, fallback: number) => {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : fallback;
+};
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 type JsonRecord = { [key: string]: JsonValue };
