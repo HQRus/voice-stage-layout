@@ -325,7 +325,6 @@ ${sourceData}`;
               items: buildFrameSchema(),
             },
 
-            },
           },
           required: ["theme", "intent", "frames"],
           additionalProperties: false,
