@@ -81,6 +81,17 @@ const intents: { value: LayoutIntent; label: string }[] = [
 export function ControlsPanel(p: Props) {
   const [jsonOpen, setJsonOpen] = useState(false);
   const [jsonText, setJsonText] = useState("");
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(STAGE_PROMPT);
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 1600);
+    } catch {}
+  };
+
 
   return (
     <aside className="w-[340px] shrink-0 h-full border-l border-border bg-card/85 backdrop-blur flex flex-col">
