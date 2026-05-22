@@ -31,7 +31,7 @@ export const generateLayoutFromData = createServerFn({ method: "POST" })
     if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { width, height } = data.viewport;
-    const model = data.model || "google/gemini-3-flash-preview";
+    const model = data.model || "google/gemini-2.5-flash";
 
     const systemPrompt = `${STAGE_PROMPT}
 
