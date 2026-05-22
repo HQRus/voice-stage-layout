@@ -3,10 +3,41 @@ import { STAGE_PROMPT } from "./stagePrompt";
 import { ITEM_CATALOG } from "./itemCatalog";
 
 const ALLOWED_TYPES = [
-  "image","video","text","document","logo","quote",
-  "concept","palette","typeSample","audio","storyboardFrame","calendarSlot","email","section",
-  "weather","stock","map","link","metric","chart","code","checklist","product","flight","poll",
-  "script","shotList","reel","adVariant","caption","thumbnail","timeline","subtitleStrip","gallery","transition",
+  "image",
+  "video",
+  "text",
+  "document",
+  "logo",
+  "quote",
+  "concept",
+  "palette",
+  "typeSample",
+  "audio",
+  "storyboardFrame",
+  "calendarSlot",
+  "email",
+  "section",
+  "weather",
+  "stock",
+  "map",
+  "link",
+  "metric",
+  "chart",
+  "code",
+  "checklist",
+  "product",
+  "flight",
+  "poll",
+  "script",
+  "shotList",
+  "reel",
+  "adVariant",
+  "caption",
+  "thumbnail",
+  "timeline",
+  "subtitleStrip",
+  "gallery",
+  "transition",
 ];
 
 const ALLOWED_ROLES = ["hero", "supporting", "equal", "background", "document"];
@@ -15,7 +46,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 function coerceInputText(input: string) {
   const trimmed = input.trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
     try {
       const unwrapped = JSON.parse(trimmed);
       if (typeof unwrapped === "string") return unwrapped.trim();
@@ -41,9 +75,7 @@ function tryParseLooseData(input: string): any | null {
 }
 
 function summarizeRawInput(input: string) {
-  return coerceInputText(input)
-    .replace(/\s+/g, " ")
-    .slice(0, 240);
+  return coerceInputText(input).replace(/\s+/g, " ").slice(0, 240);
 }
 
 function fallbackLayoutFromData(input: string, viewport: { width: number; height: number }) {
@@ -62,12 +94,23 @@ function fallbackLayoutFromData(input: string, viewport: { width: number; height
 
   if (forecast.length > 0) {
     const first = forecast[0] ?? {};
-    const temp = first?.temp_max?.celsius ?? first?.temperature?.celsius ?? first?.temp?.celsius ?? first?.temp_max ?? first?.temperature ?? "";
+    const temp =
+      first?.temp_max?.celsius ??
+      first?.temperature?.celsius ??
+      first?.temp?.celsius ??
+      first?.temp_max ??
+      first?.temperature ??
+      "";
     const cardH = Math.max(118, Math.min(160, (h - pad * 2 - 16) / 2));
     const cards = forecast.slice(1, 5).map((day: any, i: number) => {
       const col = i % 2;
       const row = Math.floor(i / 2);
-      const maxTemp = day?.temp_max?.celsius ?? day?.temperature?.celsius ?? day?.temp_max ?? day?.temperature ?? "";
+      const maxTemp =
+        day?.temp_max?.celsius ??
+        day?.temperature?.celsius ??
+        day?.temp_max ??
+        day?.temperature ??
+        "";
       const minTemp = day?.temp_min?.celsius ?? day?.temp_min ?? "";
       return {
         id: `ai-weather-${i + 1}`,
@@ -187,7 +230,11 @@ export const generateLayoutFromData = createServerFn({ method: "POST" })
     if (!input || typeof input.data !== "string" || !input.data.trim()) {
       throw new Error("`data` must be a non-empty string");
     }
-    if (!input.viewport || typeof input.viewport.width !== "number" || typeof input.viewport.height !== "number") {
+    if (
+      !input.viewport ||
+      typeof input.viewport.width !== "number" ||
+      typeof input.viewport.height !== "number"
+    ) {
       throw new Error("`viewport` must include width and height");
     }
     return input;
@@ -198,7 +245,7 @@ export const generateLayoutFromData = createServerFn({ method: "POST" })
 
     const { width, height } = data.viewport;
     const model = data.model || "google/gemini-2.5-flash";
-    const basePrompt = (data.prompt && data.prompt.trim()) ? data.prompt : STAGE_PROMPT;
+    const basePrompt = data.prompt && data.prompt.trim() ? data.prompt : STAGE_PROMPT;
 
     const systemPrompt = `${basePrompt}
 
@@ -230,10 +277,27 @@ ${sourceData}`;
             intent: {
               type: "string",
               enum: [
-                "auto","equal","hero","editorial","moodboard","logos","document","presentation",
-                "concepts","brandBoard","directions","mascotSet","storyboard","mediaPlayer",
-                "presentationKit","calendar","confirmation","transcript",
-                "reelStack","adVariants","editTimeline",
+                "auto",
+                "equal",
+                "hero",
+                "editorial",
+                "moodboard",
+                "logos",
+                "document",
+                "presentation",
+                "concepts",
+                "brandBoard",
+                "directions",
+                "mascotSet",
+                "storyboard",
+                "mediaPlayer",
+                "presentationKit",
+                "calendar",
+                "confirmation",
+                "transcript",
+                "reelStack",
+                "adVariants",
+                "editTimeline",
               ],
             },
             frames: {
@@ -254,11 +318,24 @@ ${sourceData}`;
                   layoutRole: { type: "string", enum: ALLOWED_ROLES },
                   meta: {
                     type: "object",
-                    description: "Type-specific fields (e.g. weather → {location,condition,high,low}; metric → {label,delta,up}; document → {title}). See item catalog.",
+                    description:
+                      "Type-specific fields (e.g. weather → {location,condition,high,low}; metric → {label,delta,up}; document → {title}). See item catalog.",
                     additionalProperties: true,
                   },
                 },
-                required: ["id","type","content","x","y","width","height","rotation","zIndex","focusWeight","layoutRole"],
+                required: [
+                  "id",
+                  "type",
+                  "content",
+                  "x",
+                  "y",
+                  "width",
+                  "height",
+                  "rotation",
+                  "zIndex",
+                  "focusWeight",
+                  "layoutRole",
+                ],
                 additionalProperties: true,
               },
             },
@@ -272,21 +349,21 @@ ${sourceData}`;
     let resp: Response;
     try {
       resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [tool],
-        tool_choice: { type: "function", function: { name: "compose_stage_layout" } },
-        max_tokens: 8192,
-      }),
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: "compose_stage_layout" } },
+          max_tokens: 8192,
+        }),
       });
     } catch (error) {
       console.error("AI gateway request failed", error);
@@ -297,8 +374,10 @@ ${sourceData}`;
     if (!resp.ok) {
       const text = await resp.text();
       console.error("AI gateway error", resp.status, text.slice(0, 500));
-      if (resp.status === 429) throw new Error("Rate limited by Lovable AI. Try again in a moment.");
-      if (resp.status === 402) throw new Error("Lovable AI credits exhausted. Add funds in Settings → Workspace → Usage.");
+      if (resp.status === 429)
+        throw new Error("Rate limited by Lovable AI. Try again in a moment.");
+      if (resp.status === 402)
+        throw new Error("Lovable AI credits exhausted. Add funds in Settings → Workspace → Usage.");
       const fallback = fallbackLayoutFromData(data.data, data.viewport);
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
@@ -345,7 +424,12 @@ ${sourceData}`;
     try {
       parsed = extractJSON(rawArgs);
     } catch (e) {
-      console.error("AI returned unparseable output. finish_reason=", finishReason, "raw=", String(rawArgs ?? "").slice(0, 1000));
+      console.error(
+        "AI returned unparseable output. finish_reason=",
+        finishReason,
+        "raw=",
+        String(rawArgs ?? "").slice(0, 1000),
+      );
       const fallback = fallbackLayoutFromData(data.data, data.viewport);
       return { ...fallback, frames: sanitizeFrames(fallback.frames, data.viewport) };
     }
