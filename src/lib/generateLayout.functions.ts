@@ -173,6 +173,49 @@ function repairMetaForType(type: string, content: string, meta: JsonRecord, inde
   return repaired;
 }
 
+function hasCollapsedPlacement(frames: GeneratedLayoutFrame[], viewport: { width: number; height: number }) {
+  if (frames.length <= 1) return false;
+  const diagonal = Math.max(1, Math.hypot(viewport.width, viewport.height));
+  const centers = frames.map((frame) => ({
+    x: frame.x + frame.width / 2,
+    y: frame.y + frame.height / 2,
+  }));
+  const spreadX = Math.max(...centers.map((p) => p.x)) - Math.min(...centers.map((p) => p.x));
+  const spreadY = Math.max(...centers.map((p) => p.y)) - Math.min(...centers.map((p) => p.y));
+  return Math.hypot(spreadX, spreadY) < diagonal * 0.08;
+}
+
+function hasOneNoteDocumentStack(frames: GeneratedLayoutFrame[]) {
+  if (frames.length < 4) return false;
+  const documentCount = frames.filter((frame) => frame.type === "document").length;
+  return documentCount / frames.length >= 0.75;
+}
+
+function repairLayoutComposition(
+  frames: GeneratedLayoutFrame[],
+  viewport: { width: number; height: number },
+  intent: string,
+) {
+  if (!hasCollapsedPlacement(frames, viewport) && !hasOneNoteDocumentStack(frames)) {
+    return frames;
+  }
+
+  const items = frames.map<MediaItem>((frame) => ({
+    id: frame.id,
+    type: frame.type as MediaItem["type"],
+    content: frame.content,
+    meta: frame.meta,
+    focusWeight: frame.focusWeight,
+  }));
+  const layoutIntent = STAGE_INTENTS.includes(intent) ? (intent as LayoutIntent) : "moodboard";
+  return composeDeterministicLayout(items, viewport, {
+    intent: layoutIntent,
+    equalSpacing: false,
+    overlapAmount: 0,
+    rotationAmount: 2,
+  }).frames;
+}
+
 function fallbackLayoutFromData(input: string, viewport: { width: number; height: number }) {
   const parsed = tryParseLooseData(input);
   const dataRecord = isRecord(parsed) ? parsed : {};
