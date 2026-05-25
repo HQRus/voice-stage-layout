@@ -533,13 +533,23 @@ function repairLayoutComposition(
 ) {
   const collapsed = hasCollapsedPlacement(frames, viewport);
   const oneNoteDocuments = hasOneNoteDocumentStack(frames);
-  const structuredPreview = buildStockItems(sourceData) ?? buildItineraryItems(sourceData);
+  const structuredPreview = buildItemsFromAnyData(sourceData);
+  // Prefer the deterministic structured preview when the pasted data clearly
+  // parses into >=3 items with at least one specific (non-document/text) type
+  // OR when AI's frame type-set diverges from what the data implies.
+  const aiTypes = new Set(frames.map((f) => f.type));
+  const structuredTypes = new Set(structuredPreview?.map((i) => i.type) ?? []);
+  const structuredHasVariety =
+    structuredPreview !== null &&
+    structuredPreview.length >= 3 &&
+    structuredPreview.some((i) => i.type !== "document" && i.type !== "text" && i.type !== "concept");
   const hasStructuredMismatch =
     structuredPreview !== null &&
-    !frames.some((f) => f.type === structuredPreview[0]?.type);
-  if (!collapsed && !oneNoteDocuments && !hasStructuredMismatch) {
+    [...structuredTypes].filter((t) => aiTypes.has(t)).length === 0;
+  if (!collapsed && !oneNoteDocuments && !hasStructuredMismatch && !structuredHasVariety) {
     return frames;
   }
+
 
 
   const items = structuredPreview
