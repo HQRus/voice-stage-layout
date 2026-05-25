@@ -251,63 +251,102 @@ function buildStockItems(input: string): MediaItem[] | null {
 function buildItineraryItems(input: string): MediaItem[] | null {
   const parsed = tryParseLooseData(input);
   const record = isRecord(parsed) ? parsed : null;
-  const days = Array.isArray(record?.daily_schedule) ? record.daily_schedule : [];
-  if (!record || days.length === 0) return null;
+  if (!record) return null;
+  const days = Array.isArray(record.daily_schedule)
+    ? record.daily_schedule
+    : Array.isArray(record.itinerary)
+      ? record.itinerary
+      : Array.isArray(record.days)
+        ? record.days
+        : Array.isArray(record.schedule)
+          ? record.schedule
+          : [];
+  if (days.length === 0) return null;
 
-  const destination = String(record.destination ?? "Itinerary");
-  const focus = String(record.curation_focus ?? record.focus ?? "");
+  const destination = String(record.destination ?? record.location ?? record.city ?? "Itinerary");
+  const focus = String(record.curation_focus ?? record.focus ?? record.summary ?? "");
+  const dayCount = toFiniteNumber(record.itinerary_days ?? record.duration_days ?? days.length, days.length);
   const items: MediaItem[] = [
     {
       id: "ai-itinerary-hero",
       type: "document",
-      content: focus || summarizeRawInput(input),
+      content: focus || `${dayCount}-day trip through ${destination}.`,
       meta: { title: destination },
       focusWeight: 1,
     },
     {
       id: "ai-itinerary-days",
       type: "metric",
-      content: String(record.itinerary_days ?? days.length),
-      meta: { label: "itinerary days" },
+      content: String(dayCount),
+      meta: { label: dayCount === 1 ? "day" : "days" },
       focusWeight: 0.7,
     },
   ];
 
-  days.slice(0, 3).forEach((day, index) => {
+  const slotKeys = ["morning", "afternoon", "evening", "night"];
+  days.slice(0, 4).forEach((day, dayIndex) => {
     const dayRecord = isRecord(day) ? day : {};
-    items.push({
-      id: `ai-itinerary-day-${index + 1}`,
-      type: "calendarSlot",
-      content: `Day ${String(dayRecord.day ?? index + 1)}`,
-      meta: {
-        day: `Day ${String(dayRecord.day ?? index + 1)}`,
-        duration: "Full day",
-        status: "booked",
-        title: String(dayRecord.focus ?? "Design route"),
-      },
-      focusWeight: 0.65,
-    });
+    const dayLabel = `Day ${String(dayRecord.day ?? dayIndex + 1)}`;
+    const theme = String(dayRecord.theme ?? dayRecord.focus ?? dayRecord.title ?? "");
+
+    // Shape A: { activities: [{ time_of_day, title, description }] }
+    const activities = Array.isArray(dayRecord.activities) ? dayRecord.activities.filter(isRecord) : [];
+    if (activities.length > 0) {
+      items.push({
+        id: `ai-itinerary-day-${dayIndex + 1}`,
+        type: "calendarSlot",
+        content: dayLabel,
+        meta: { day: dayLabel, duration: "Full day", status: "booked", title: theme || dayLabel },
+        focusWeight: 0.65,
+      });
+      activities.slice(0, 3).forEach((act, actIndex) => {
+        const title = String(act.title ?? act.name ?? act.activity ?? "Activity");
+        const desc = String(act.description ?? act.note ?? act.details ?? "");
+        const when = String(act.time_of_day ?? act.time ?? "");
+        items.push({
+          id: `ai-itinerary-d${dayIndex + 1}-a${actIndex + 1}`,
+          type: actIndex === 0 ? "document" : actIndex === 1 ? "map" : "concept",
+          content: desc || title,
+          meta: actIndex === 1 ? { place: title } : { title: when ? `${when} · ${title}` : title },
+          focusWeight: 0.6,
+        });
+      });
+      return;
+    }
+
+    // Shape B: { morning, afternoon, evening } slots
+    const slots = slotKeys.map((k) => getPath(dayRecord, [k])).filter(isRecord);
+    if (slots.length > 0) {
+      items.push({
+        id: `ai-itinerary-day-${dayIndex + 1}`,
+        type: "calendarSlot",
+        content: dayLabel,
+        meta: { day: dayLabel, duration: "Full day", status: "booked", title: theme || dayLabel },
+        focusWeight: 0.65,
+      });
+      slots.slice(0, 2).forEach((site, siteIndex) => {
+        const place = String(site.site ?? site.place ?? site.title ?? `Site ${siteIndex + 1}`);
+        items.push({
+          id: `ai-itinerary-d${dayIndex + 1}-s${siteIndex + 1}`,
+          type: "map",
+          content: String(site.architectural_significance ?? site.description ?? site.note ?? place),
+          meta: { place },
+          focusWeight: 0.55,
+        });
+      });
+    }
   });
 
-  const siteSlots = ["morning", "afternoon", "evening"];
-  const sites = days.flatMap((day) => {
-    const dayRecord = isRecord(day) ? day : {};
-    return siteSlots.map((slot) => getPath(dayRecord, [slot])).filter(isRecord);
-  });
-  sites.slice(0, 3).forEach((site, index) => {
-    const place = String(site.site ?? site.place ?? `Site ${index + 1}`);
-    items.push({
-      id: `ai-itinerary-site-${index + 1}`,
-      type: "map",
-      content: String(site.architectural_significance ?? site.note ?? place),
-      meta: { place },
-      focusWeight: 0.6,
-    });
-  });
-
-  const tips = Array.isArray(record.practical_tips)
-    ? record.practical_tips.slice(0, 5).map((tip) => ({ text: String(tip), done: false }))
-    : [];
+  const tipsSource = Array.isArray(record.practical_tips)
+    ? record.practical_tips
+    : isRecord(record.travel_tips)
+      ? Object.values(record.travel_tips)
+      : isRecord(record.tips)
+        ? Object.values(record.tips)
+        : Array.isArray(record.tips)
+          ? record.tips
+          : [];
+  const tips = tipsSource.slice(0, 5).map((tip) => ({ text: String(tip), done: false }));
   if (tips.length > 0) {
     items.push({
       id: "ai-itinerary-tips",
@@ -318,8 +357,11 @@ function buildItineraryItems(input: string): MediaItem[] | null {
     });
   }
 
-  return items.slice(0, 9);
+  return items.slice(0, 12);
 }
+
+
+
 
 function diversifyDocumentFrames(frames: GeneratedLayoutFrame[]): MediaItem[] {
   return frames.map<MediaItem>((frame, index) => {
