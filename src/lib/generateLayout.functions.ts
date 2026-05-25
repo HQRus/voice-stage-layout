@@ -191,173 +191,316 @@ function hasOneNoteDocumentStack(frames: GeneratedLayoutFrame[]) {
   return documentCount / frames.length >= 0.75;
 }
 
-function buildStockItems(input: string): MediaItem[] | null {
-  const parsed = tryParseLooseData(input);
-  const record = isRecord(parsed) ? parsed : null;
-  const stocks: unknown[] | null = Array.isArray(record?.stocks)
-    ? (record!.stocks as unknown[])
-    : Array.isArray(parsed)
-      ? (parsed as unknown[])
-      : null;
-  if (!stocks || stocks.length === 0) return null;
-  const stockRecords = stocks.filter(isRecord);
-  if (stockRecords.length === 0) return null;
-  const looksLikeStocks = stockRecords.some(
-    (s) =>
-      typeof s.symbol === "string" ||
-      typeof s.ticker === "string" ||
-      isRecord(s.metrics) ||
-      typeof s.price === "number" ||
-      typeof s.change === "number",
-  );
-  if (!looksLikeStocks) return null;
+// ---------- Generic JSON → MediaItem mapper ----------
+// Works for ANY pasted JSON shape. Walks the tree, finds arrays of objects,
+// and classifies each record into the best-fitting Stage item type by looking
+// at which fields it has (lat/lon → map, symbol+price → stock, etc.).
 
-  return stockRecords.slice(0, 8).map<MediaItem>((s, i) => {
-    const metrics = isRecord(s.metrics) ? s.metrics : {};
-    const price = toFiniteNumber(s.price ?? metrics.price, 0);
-    const change = toFiniteNumber(s.change ?? metrics.change, 0);
-    const pct = toFiniteNumber(
-      s.percent_change ?? s.changePct ?? metrics.percent_change ?? metrics.changePct,
-      0,
-    );
-    const up = change >= 0;
-    const spark = Array.from({ length: 10 }, (_, k) => {
-      const t = k / 9;
-      const drift = up ? t : 1 - t;
-      const wiggle = Math.sin(k * 1.3 + i) * 0.15;
-      return Number((drift + wiggle).toFixed(3));
-    });
-    const symbol = String(s.symbol ?? s.ticker ?? `STK${i + 1}`);
-    const name = String(s.name ?? symbol);
+const pickKey = (obj: Record<string, unknown>, keys: string[]): unknown => {
+  const lookup = new Map(Object.keys(obj).map((k) => [k.toLowerCase(), k]));
+  for (const k of keys) {
+    const real = lookup.get(k.toLowerCase());
+    if (real !== undefined) {
+      const v = obj[real];
+      if (v !== undefined && v !== null && v !== "") return v;
+    }
+  }
+  return undefined;
+};
+const str = (v: unknown) => (v == null ? "" : String(v));
+
+function flattenToString(v: unknown, depth = 0): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (depth > 2) return "";
+  if (Array.isArray(v))
+    return v.slice(0, 6).map((x) => flattenToString(x, depth + 1)).filter(Boolean).join(" · ");
+  if (isRecord(v))
+    return Object.values(v).slice(0, 4).map((x) => flattenToString(x, depth + 1)).filter(Boolean).join(" · ");
+  return "";
+}
+
+function classifyRecordAsItem(rec: Record<string, unknown>, index: number): MediaItem {
+  const id = `ai-gen-${index}-${Math.random().toString(36).slice(2, 7)}`;
+  const focus = index === 0 ? 0.9 : 0.55;
+  const metricsBag = isRecord(pickKey(rec, ["metrics"])) ? (pickKey(rec, ["metrics"]) as Record<string, unknown>) : {};
+
+  // stock
+  const symbol = str(pickKey(rec, ["symbol", "ticker"]));
+  const priceRaw = pickKey(rec, ["price"]) ?? metricsBag.price;
+  const changeRaw = pickKey(rec, ["change"]) ?? metricsBag.change;
+  const pctRaw =
+    pickKey(rec, ["percent_change", "changePct", "percentChange", "change_percent"]) ??
+    metricsBag.percent_change ??
+    metricsBag.changePct;
+  if (symbol && (priceRaw != null || changeRaw != null)) {
+    const p = toFiniteNumber(priceRaw, 0);
+    const c = toFiniteNumber(changeRaw, 0);
+    const pp = toFiniteNumber(pctRaw, 0);
+    const up = c >= 0;
     return {
-      id: `ai-stock-${symbol}-${i}`,
+      id,
       type: "stock",
       content: symbol,
       meta: {
-        name,
-        price: price
-          ? `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-          : String(s.price ?? ""),
-        change: change ? `${up ? "+" : ""}${change.toFixed(2)}` : String(s.change ?? ""),
-        changePct: pct ? `${up ? "+" : ""}${pct.toFixed(2)}%` : "",
+        name: str(pickKey(rec, ["name", "company"])) || symbol,
+        price: p ? `$${p.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : str(priceRaw),
+        change: c ? `${up ? "+" : ""}${c.toFixed(2)}` : str(changeRaw),
+        changePct: pp ? `${up ? "+" : ""}${pp.toFixed(2)}%` : "",
         up,
-        spark,
+        spark: Array.from({ length: 10 }, (_, k) => {
+          const t = k / 9;
+          const drift = up ? t : 1 - t;
+          return Number((drift + Math.sin(k * 1.3 + index) * 0.15).toFixed(3));
+        }),
       },
-      focusWeight: i === 0 ? 1 : 0.6,
+      focusWeight: focus,
     };
-  });
-}
-
-function buildItineraryItems(input: string): MediaItem[] | null {
-  const parsed = tryParseLooseData(input);
-  const record = isRecord(parsed) ? parsed : null;
-  if (!record) return null;
-  const days = Array.isArray(record.daily_schedule)
-    ? record.daily_schedule
-    : Array.isArray(record.itinerary)
-      ? record.itinerary
-      : Array.isArray(record.days)
-        ? record.days
-        : Array.isArray(record.schedule)
-          ? record.schedule
-          : [];
-  if (days.length === 0) return null;
-
-  const destination = String(record.destination ?? record.location ?? record.city ?? "Itinerary");
-  const focus = String(record.curation_focus ?? record.focus ?? record.summary ?? "");
-  const dayCount = toFiniteNumber(record.itinerary_days ?? record.duration_days ?? days.length, days.length);
-  const items: MediaItem[] = [
-    {
-      id: "ai-itinerary-hero",
-      type: "document",
-      content: focus || `${dayCount}-day trip through ${destination}.`,
-      meta: { title: destination },
-      focusWeight: 1,
-    },
-    {
-      id: "ai-itinerary-days",
-      type: "metric",
-      content: String(dayCount),
-      meta: { label: dayCount === 1 ? "day" : "days" },
-      focusWeight: 0.7,
-    },
-  ];
-
-  const slotKeys = ["morning", "afternoon", "evening", "night"];
-  days.slice(0, 4).forEach((day, dayIndex) => {
-    const dayRecord = isRecord(day) ? day : {};
-    const dayLabel = `Day ${String(dayRecord.day ?? dayIndex + 1)}`;
-    const theme = String(dayRecord.theme ?? dayRecord.focus ?? dayRecord.title ?? "");
-
-    // Shape A: { activities: [{ time_of_day, title, description }] }
-    const activities = Array.isArray(dayRecord.activities) ? dayRecord.activities.filter(isRecord) : [];
-    if (activities.length > 0) {
-      items.push({
-        id: `ai-itinerary-day-${dayIndex + 1}`,
-        type: "calendarSlot",
-        content: dayLabel,
-        meta: { day: dayLabel, duration: "Full day", status: "booked", title: theme || dayLabel },
-        focusWeight: 0.65,
-      });
-      activities.slice(0, 3).forEach((act, actIndex) => {
-        const title = String(act.title ?? act.name ?? act.activity ?? "Activity");
-        const desc = String(act.description ?? act.note ?? act.details ?? "");
-        const when = String(act.time_of_day ?? act.time ?? "");
-        items.push({
-          id: `ai-itinerary-d${dayIndex + 1}-a${actIndex + 1}`,
-          type: actIndex === 0 ? "document" : actIndex === 1 ? "map" : "concept",
-          content: desc || title,
-          meta: actIndex === 1 ? { place: title } : { title: when ? `${when} · ${title}` : title },
-          focusWeight: 0.6,
-        });
-      });
-      return;
-    }
-
-    // Shape B: { morning, afternoon, evening } slots
-    const slots = slotKeys.map((k) => getPath(dayRecord, [k])).filter(isRecord);
-    if (slots.length > 0) {
-      items.push({
-        id: `ai-itinerary-day-${dayIndex + 1}`,
-        type: "calendarSlot",
-        content: dayLabel,
-        meta: { day: dayLabel, duration: "Full day", status: "booked", title: theme || dayLabel },
-        focusWeight: 0.65,
-      });
-      slots.slice(0, 2).forEach((site, siteIndex) => {
-        const place = String(site.site ?? site.place ?? site.title ?? `Site ${siteIndex + 1}`);
-        items.push({
-          id: `ai-itinerary-d${dayIndex + 1}-s${siteIndex + 1}`,
-          type: "map",
-          content: String(site.architectural_significance ?? site.description ?? site.note ?? place),
-          meta: { place },
-          focusWeight: 0.55,
-        });
-      });
-    }
-  });
-
-  const tipsSource = Array.isArray(record.practical_tips)
-    ? record.practical_tips
-    : isRecord(record.travel_tips)
-      ? Object.values(record.travel_tips)
-      : isRecord(record.tips)
-        ? Object.values(record.tips)
-        : Array.isArray(record.tips)
-          ? record.tips
-          : [];
-  const tips = tipsSource.slice(0, 5).map((tip) => ({ text: String(tip), done: false }));
-  if (tips.length > 0) {
-    items.push({
-      id: "ai-itinerary-tips",
-      type: "checklist",
-      content: "Practical notes",
-      meta: { items: tips },
-      focusWeight: 0.55,
-    });
   }
 
-  return items.slice(0, 12);
+  // map coords
+  const lat = toFiniteNumber(pickKey(rec, ["lat", "latitude"]), NaN);
+  const lon = toFiniteNumber(pickKey(rec, ["lon", "lng", "longitude"]), NaN);
+  const place = str(pickKey(rec, ["place", "location", "city", "address", "venue", "site", "destination"]));
+
+  // weather
+  const temp = pickKey(rec, ["temp", "temperature", "temp_max"]);
+  const condition = str(pickKey(rec, ["condition", "weather", "sky", "forecast"]));
+  if (temp != null || condition) {
+    const t = toFiniteNumber(temp, NaN);
+    const high = toFiniteNumber(pickKey(rec, ["high", "temp_max"]), NaN);
+    const low = toFiniteNumber(pickKey(rec, ["low", "temp_min"]), NaN);
+    return {
+      id,
+      type: "weather",
+      content: Number.isFinite(t) ? `${Math.round(t)}°` : condition || "Weather",
+      meta: {
+        location: str(pickKey(rec, ["location", "city", "day", "date"])) || place || "Today",
+        condition: condition || "—",
+        high: Number.isFinite(high) ? high : undefined,
+        low: Number.isFinite(low) ? low : undefined,
+      },
+      focusWeight: focus,
+    };
+  }
+
+  // flight
+  const from = str(pickKey(rec, ["from", "origin", "departure_airport"]));
+  const to = str(pickKey(rec, ["to", "destination_airport", "arrival_airport"]));
+  if (from && to && (from.length <= 6 || pickKey(rec, ["airline", "flight", "depart", "arrive"]))) {
+    return {
+      id,
+      type: "flight",
+      content: str(pickKey(rec, ["flight", "number", "code"])) || `${from}→${to}`,
+      meta: {
+        from,
+        to,
+        depart: str(pickKey(rec, ["depart", "departure", "fromTime", "depart_time"])),
+        arrive: str(pickKey(rec, ["arrive", "arrival", "toTime", "arrive_time"])),
+        airline: str(pickKey(rec, ["airline", "carrier"])),
+        flight: str(pickKey(rec, ["flight", "number"])),
+      },
+      focusWeight: focus,
+    };
+  }
+
+  // link
+  const url = str(pickKey(rec, ["url", "link", "href"]));
+  if (url) {
+    const linkTitle = str(pickKey(rec, ["title", "name", "headline"])) || url;
+    return {
+      id,
+      type: "link",
+      content: linkTitle,
+      meta: { url, title: linkTitle, source: str(pickKey(rec, ["source", "domain", "site"])) },
+      focusWeight: focus,
+    };
+  }
+
+  // email
+  const emailTo = str(pickKey(rec, ["to", "recipient"]));
+  const subject = str(pickKey(rec, ["subject"]));
+  if (emailTo && subject) {
+    return {
+      id,
+      type: "email",
+      content: str(pickKey(rec, ["body", "message", "preview"])) || subject,
+      meta: { to: emailTo, subject },
+      focusWeight: focus,
+    };
+  }
+
+  // product
+  const brand = str(pickKey(rec, ["brand", "manufacturer"]));
+  const productName = str(pickKey(rec, ["product", "name", "title"]));
+  if (brand && productName && pickKey(rec, ["price"]) != null) {
+    return {
+      id,
+      type: "product",
+      content: productName,
+      meta: { brand, price: str(pickKey(rec, ["price"])) },
+      focusWeight: focus,
+    };
+  }
+
+  // calendar slot — time + label
+  const time = str(pickKey(rec, ["time", "time_of_day", "start", "when", "start_time"]));
+  const day = str(pickKey(rec, ["day", "date", "dow", "weekday"]));
+  const slotTitle = str(pickKey(rec, ["title", "activity", "name", "event"]));
+  if ((time || day) && slotTitle) {
+    return {
+      id,
+      type: "calendarSlot",
+      content: time || day,
+      meta: {
+        day: day || "Today",
+        duration: str(pickKey(rec, ["duration"])) || "1h",
+        status: "booked",
+        title: slotTitle,
+      },
+      focusWeight: focus,
+    };
+  }
+
+  // map (coords or named place without other classifiers)
+  if ((Number.isFinite(lat) && Number.isFinite(lon)) || place) {
+    return {
+      id,
+      type: "map",
+      content: place || "Location",
+      meta: {
+        place: place || "Location",
+        lat: Number.isFinite(lat) ? lat : undefined,
+        lon: Number.isFinite(lon) ? lon : undefined,
+      },
+      focusWeight: focus,
+    };
+  }
+
+  // checklist item
+  const checkText = str(pickKey(rec, ["text", "label", "task", "item"]));
+  const doneVal = pickKey(rec, ["done", "checked", "completed"]);
+  if (checkText && typeof doneVal === "boolean") {
+    return {
+      id,
+      type: "checklist",
+      content: checkText,
+      meta: { items: [{ text: checkText, done: doneVal }] },
+      focusWeight: focus,
+    };
+  }
+
+  // title + body → document / concept
+  const title = str(pickKey(rec, ["title", "name", "theme", "heading", "headline"]));
+  const body = str(
+    pickKey(rec, ["description", "body", "summary", "details", "content", "note", "text", "abstract"]),
+  );
+  if (title || body) {
+    const type = index === 0 ? "document" : index % 3 === 1 ? "concept" : "document";
+    const contentText = body || flattenToString(rec) || title;
+    return {
+      id,
+      type,
+      content: contentText,
+      meta: { title: title || deriveTitleFromText(contentText, `Item ${index + 1}`) },
+      focusWeight: focus,
+    };
+  }
+
+  // single number → metric
+  const numericEntry = Object.entries(rec).find(([, v]) => typeof v === "number");
+  if (numericEntry) {
+    const [label, value] = numericEntry;
+    return {
+      id,
+      type: "metric",
+      content: String(value),
+      meta: { label: label.replace(/_/g, " ") },
+      focusWeight: focus,
+    };
+  }
+
+  // catch-all
+  const flat = flattenToString(rec);
+  return {
+    id,
+    type: "concept",
+    content: flat,
+    meta: { title: deriveTitleFromText(flat, `Item ${index + 1}`) },
+    focusWeight: focus,
+  };
+}
+
+function findRecordArrays(
+  value: unknown,
+  out: Record<string, unknown>[][] = [],
+): Record<string, unknown>[][] {
+  if (Array.isArray(value)) {
+    const records = value.filter(isRecord);
+    if (records.length >= 1) out.push(records);
+    for (const v of value) findRecordArrays(v, out);
+  } else if (isRecord(value)) {
+    for (const v of Object.values(value)) findRecordArrays(v, out);
+  }
+  return out;
+}
+
+function buildItemsFromAnyData(input: string): MediaItem[] | null {
+  const parsed = tryParseLooseData(input);
+  if (parsed == null) return null;
+
+  const items: MediaItem[] = [];
+
+  // Top-level hero from root-level scalars
+  if (isRecord(parsed)) {
+    const heroTitle = str(
+      pickKey(parsed, ["title", "name", "destination", "city", "subject", "headline", "topic", "theme"]),
+    );
+    const heroBody = str(
+      pickKey(parsed, ["summary", "description", "overview", "focus", "intro", "abstract", "curation_focus"]),
+    );
+    if (heroTitle || heroBody) {
+      items.push({
+        id: "ai-gen-hero",
+        type: "document",
+        content: heroBody || heroTitle,
+        meta: { title: heroTitle || deriveTitleFromText(heroBody, "Overview") },
+        focusWeight: 1,
+      });
+    }
+    const metricEntry = Object.entries(parsed).find(
+      ([k, v]) => typeof v === "number" && /day|count|total|num|qty|amount|score/i.test(k),
+    );
+    if (metricEntry) {
+      const [label, value] = metricEntry;
+      items.push({
+        id: "ai-gen-hero-metric",
+        type: "metric",
+        content: String(value),
+        meta: { label: label.replace(/_/g, " ") },
+        focusWeight: 0.7,
+      });
+    }
+  }
+
+  // Walk tree for arrays of objects; classify each record.
+  const groups = findRecordArrays(parsed)
+    .filter((g) => g.length >= 1)
+    .sort((a, b) => b.length - a.length);
+
+  const seen = new Set<Record<string, unknown>>();
+  for (const group of groups) {
+    if (items.length >= 12) break;
+    for (const rec of group) {
+      if (items.length >= 12) break;
+      if (seen.has(rec)) continue;
+      seen.add(rec);
+      items.push(classifyRecordAsItem(rec, items.length));
+    }
+  }
+
+  return items.length > 0 ? items : null;
 }
 
 
@@ -390,13 +533,23 @@ function repairLayoutComposition(
 ) {
   const collapsed = hasCollapsedPlacement(frames, viewport);
   const oneNoteDocuments = hasOneNoteDocumentStack(frames);
-  const structuredPreview = buildStockItems(sourceData) ?? buildItineraryItems(sourceData);
+  const structuredPreview = buildItemsFromAnyData(sourceData);
+  // Prefer the deterministic structured preview when the pasted data clearly
+  // parses into >=3 items with at least one specific (non-document/text) type
+  // OR when AI's frame type-set diverges from what the data implies.
+  const aiTypes = new Set(frames.map((f) => f.type));
+  const structuredTypes = new Set(structuredPreview?.map((i) => i.type) ?? []);
+  const structuredHasVariety =
+    structuredPreview !== null &&
+    structuredPreview.length >= 3 &&
+    structuredPreview.some((i) => i.type !== "document" && i.type !== "text" && i.type !== "concept");
   const hasStructuredMismatch =
     structuredPreview !== null &&
-    !frames.some((f) => f.type === structuredPreview[0]?.type);
-  if (!collapsed && !oneNoteDocuments && !hasStructuredMismatch) {
+    [...structuredTypes].filter((t) => aiTypes.has(t)).length === 0;
+  if (!collapsed && !oneNoteDocuments && !hasStructuredMismatch && !structuredHasVariety) {
     return frames;
   }
+
 
 
   const items = structuredPreview
