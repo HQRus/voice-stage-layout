@@ -361,72 +361,7 @@ function buildItineraryItems(input: string): MediaItem[] | null {
 }
 
 
-  const destination = String(record.destination ?? "Itinerary");
-  const focus = String(record.curation_focus ?? record.focus ?? "");
-  const items: MediaItem[] = [
-    {
-      id: "ai-itinerary-hero",
-      type: "document",
-      content: focus || summarizeRawInput(input),
-      meta: { title: destination },
-      focusWeight: 1,
-    },
-    {
-      id: "ai-itinerary-days",
-      type: "metric",
-      content: String(record.itinerary_days ?? days.length),
-      meta: { label: "itinerary days" },
-      focusWeight: 0.7,
-    },
-  ];
 
-  days.slice(0, 3).forEach((day, index) => {
-    const dayRecord = isRecord(day) ? day : {};
-    items.push({
-      id: `ai-itinerary-day-${index + 1}`,
-      type: "calendarSlot",
-      content: `Day ${String(dayRecord.day ?? index + 1)}`,
-      meta: {
-        day: `Day ${String(dayRecord.day ?? index + 1)}`,
-        duration: "Full day",
-        status: "booked",
-        title: String(dayRecord.focus ?? "Design route"),
-      },
-      focusWeight: 0.65,
-    });
-  });
-
-  const siteSlots = ["morning", "afternoon", "evening"];
-  const sites = days.flatMap((day) => {
-    const dayRecord = isRecord(day) ? day : {};
-    return siteSlots.map((slot) => getPath(dayRecord, [slot])).filter(isRecord);
-  });
-  sites.slice(0, 3).forEach((site, index) => {
-    const place = String(site.site ?? site.place ?? `Site ${index + 1}`);
-    items.push({
-      id: `ai-itinerary-site-${index + 1}`,
-      type: "map",
-      content: String(site.architectural_significance ?? site.note ?? place),
-      meta: { place },
-      focusWeight: 0.6,
-    });
-  });
-
-  const tips = Array.isArray(record.practical_tips)
-    ? record.practical_tips.slice(0, 5).map((tip) => ({ text: String(tip), done: false }))
-    : [];
-  if (tips.length > 0) {
-    items.push({
-      id: "ai-itinerary-tips",
-      type: "checklist",
-      content: "Practical notes",
-      meta: { items: tips },
-      focusWeight: 0.55,
-    });
-  }
-
-  return items.slice(0, 9);
-}
 
 function diversifyDocumentFrames(frames: GeneratedLayoutFrame[]): MediaItem[] {
   return frames.map<MediaItem>((frame, index) => {
