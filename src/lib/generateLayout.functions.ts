@@ -357,9 +357,8 @@ function repairLayoutComposition(
   }
 
 
-  const structured = buildStockItems(sourceData) ?? buildItineraryItems(sourceData);
-  const items = structured
-    ? structured
+  const items = structuredPreview
+    ? structuredPreview
     : oneNoteDocuments
       ? diversifyDocumentFrames(frames)
       : frames.map<MediaItem>((frame) => ({
@@ -369,6 +368,7 @@ function repairLayoutComposition(
           meta: frame.meta,
           focusWeight: frame.focusWeight,
         }));
+
 
   const requestedIntent = STAGE_INTENTS.includes(intent) ? (intent as LayoutIntent) : "moodboard";
   const layoutIntent = requestedIntent === "presentationKit" || requestedIntent === "transcript" ? "moodboard" : requestedIntent;
