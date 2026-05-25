@@ -191,6 +191,63 @@ function hasOneNoteDocumentStack(frames: GeneratedLayoutFrame[]) {
   return documentCount / frames.length >= 0.75;
 }
 
+function buildStockItems(input: string): MediaItem[] | null {
+  const parsed = tryParseLooseData(input);
+  const record = isRecord(parsed) ? parsed : null;
+  const stocks: unknown[] | null = Array.isArray(record?.stocks)
+    ? (record!.stocks as unknown[])
+    : Array.isArray(parsed)
+      ? (parsed as unknown[])
+      : null;
+  if (!stocks || stocks.length === 0) return null;
+  const stockRecords = stocks.filter(isRecord);
+  if (stockRecords.length === 0) return null;
+  const looksLikeStocks = stockRecords.some(
+    (s) =>
+      typeof s.symbol === "string" ||
+      typeof s.ticker === "string" ||
+      isRecord(s.metrics) ||
+      typeof s.price === "number" ||
+      typeof s.change === "number",
+  );
+  if (!looksLikeStocks) return null;
+
+  return stockRecords.slice(0, 8).map<MediaItem>((s, i) => {
+    const metrics = isRecord(s.metrics) ? s.metrics : {};
+    const price = toFiniteNumber(s.price ?? metrics.price, 0);
+    const change = toFiniteNumber(s.change ?? metrics.change, 0);
+    const pct = toFiniteNumber(
+      s.percent_change ?? s.changePct ?? metrics.percent_change ?? metrics.changePct,
+      0,
+    );
+    const up = change >= 0;
+    const spark = Array.from({ length: 10 }, (_, k) => {
+      const t = k / 9;
+      const drift = up ? t : 1 - t;
+      const wiggle = Math.sin(k * 1.3 + i) * 0.15;
+      return Number((drift + wiggle).toFixed(3));
+    });
+    const symbol = String(s.symbol ?? s.ticker ?? `STK${i + 1}`);
+    const name = String(s.name ?? symbol);
+    return {
+      id: `ai-stock-${symbol}-${i}`,
+      type: "stock",
+      content: symbol,
+      meta: {
+        name,
+        price: price
+          ? `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+          : String(s.price ?? ""),
+        change: change ? `${up ? "+" : ""}${change.toFixed(2)}` : String(s.change ?? ""),
+        changePct: pct ? `${up ? "+" : ""}${pct.toFixed(2)}%` : "",
+        up,
+        spark,
+      },
+      focusWeight: i === 0 ? 1 : 0.6,
+    };
+  });
+}
+
 function buildItineraryItems(input: string): MediaItem[] | null {
   const parsed = tryParseLooseData(input);
   const record = isRecord(parsed) ? parsed : null;
@@ -291,19 +348,28 @@ function repairLayoutComposition(
 ) {
   const collapsed = hasCollapsedPlacement(frames, viewport);
   const oneNoteDocuments = hasOneNoteDocumentStack(frames);
-  if (!collapsed && !oneNoteDocuments) {
+  const structuredPreview = buildStockItems(sourceData) ?? buildItineraryItems(sourceData);
+  const hasStructuredMismatch =
+    structuredPreview !== null &&
+    !frames.some((f) => f.type === structuredPreview[0]?.type);
+  if (!collapsed && !oneNoteDocuments && !hasStructuredMismatch) {
     return frames;
   }
 
-  const items = oneNoteDocuments
-    ? buildItineraryItems(sourceData) ?? diversifyDocumentFrames(frames)
-    : frames.map<MediaItem>((frame) => ({
-    id: frame.id,
-    type: frame.type as MediaItem["type"],
-    content: frame.content,
-    meta: frame.meta,
-    focusWeight: frame.focusWeight,
-  }));
+
+  const items = structuredPreview
+    ? structuredPreview
+    : oneNoteDocuments
+      ? diversifyDocumentFrames(frames)
+      : frames.map<MediaItem>((frame) => ({
+          id: frame.id,
+          type: frame.type as MediaItem["type"],
+          content: frame.content,
+          meta: frame.meta,
+          focusWeight: frame.focusWeight,
+        }));
+
+
   const requestedIntent = STAGE_INTENTS.includes(intent) ? (intent as LayoutIntent) : "moodboard";
   const layoutIntent = requestedIntent === "presentationKit" || requestedIntent === "transcript" ? "moodboard" : requestedIntent;
   return composeDeterministicLayout(items, viewport, {
