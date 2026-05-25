@@ -348,9 +348,14 @@ function repairLayoutComposition(
 ) {
   const collapsed = hasCollapsedPlacement(frames, viewport);
   const oneNoteDocuments = hasOneNoteDocumentStack(frames);
-  if (!collapsed && !oneNoteDocuments) {
+  const structuredPreview = buildStockItems(sourceData) ?? buildItineraryItems(sourceData);
+  const hasStructuredMismatch =
+    structuredPreview !== null &&
+    !frames.some((f) => f.type === structuredPreview[0]?.type);
+  if (!collapsed && !oneNoteDocuments && !hasStructuredMismatch) {
     return frames;
   }
+
 
   const structured = buildStockItems(sourceData) ?? buildItineraryItems(sourceData);
   const items = structured
