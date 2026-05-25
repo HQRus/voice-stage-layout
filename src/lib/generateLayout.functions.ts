@@ -352,15 +352,19 @@ function repairLayoutComposition(
     return frames;
   }
 
-  const items = oneNoteDocuments
-    ? buildItineraryItems(sourceData) ?? diversifyDocumentFrames(frames)
-    : frames.map<MediaItem>((frame) => ({
-    id: frame.id,
-    type: frame.type as MediaItem["type"],
-    content: frame.content,
-    meta: frame.meta,
-    focusWeight: frame.focusWeight,
-  }));
+  const structured = buildStockItems(sourceData) ?? buildItineraryItems(sourceData);
+  const items = structured
+    ? structured
+    : oneNoteDocuments
+      ? diversifyDocumentFrames(frames)
+      : frames.map<MediaItem>((frame) => ({
+          id: frame.id,
+          type: frame.type as MediaItem["type"],
+          content: frame.content,
+          meta: frame.meta,
+          focusWeight: frame.focusWeight,
+        }));
+
   const requestedIntent = STAGE_INTENTS.includes(intent) ? (intent as LayoutIntent) : "moodboard";
   const layoutIntent = requestedIntent === "presentationKit" || requestedIntent === "transcript" ? "moodboard" : requestedIntent;
   return composeDeterministicLayout(items, viewport, {
